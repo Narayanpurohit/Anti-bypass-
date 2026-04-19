@@ -1,0 +1,27 @@
+{
+  "name": "TeamDev Proxy",
+  "description": "TeamDev Anti-Bot Proxy",
+  "stack": "container",
+  "env": {
+    "MONGO_URL": {
+      "description": "MongoDB Atlas connection URI (mongodb+srv://...)",
+      "value": ""
+    },
+    "HCAPTCHA_SITEKEY": {
+      "description": "hCaptcha public site key",
+      "value": "ES_1d12af4d021c429dade0ff95cdc4e60b"
+    },
+    "HCAPTCHA_SECRET": {
+      "description": "hCaptcha secret key",
+      "value": "630ae77a-168a-42ca-b740-ea0a72e2d07a"
+    },
+    "ADMIN_PASSWORD": {
+      "description": "Admin panel login password",
+      "value": "TeamDev@Admin2025"
+    },
+    "BASE_URL": {
+      "description": "Your public app URL e.g. https://your-app.herokuapp.com",
+      "value": ""
+    }
+  }
+}

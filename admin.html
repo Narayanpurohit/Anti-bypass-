@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#060810"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>TeamDev — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--s1:#090c17;--s2:#0c0f1c;--b1:#141828;--b2:#1d2236;--b3:#262d48;
+  --cyan:#00d4ff;--violet:#8b5cf6;--green:#00e5a0;--red:#ff4d6d;--amber:#f59e0b;
+  --blue:#60a5fa;--purple:#a78bfa;--text:#dde4f0;--muted:#4a5470;--dim:#2a3050;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;--r:14px;
+  --sidebar:252px;--header:58px;--bottom-nav:62px;
+}
+html{height:100%;-webkit-tap-highlight-color:transparent}
+body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 0% 0%,rgba(139,92,246,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 100%,rgba(0,212,255,.05) 0%,transparent 55%);}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,212,255,.016) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.016) 1px,transparent 1px);
+  background-size:48px 48px;}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b3);border-radius:2px}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
+.login-card{position:relative;z-index:1;background:linear-gradient(145deg,rgba(12,15,28,.95),rgba(9,12,23,.98));border:1px solid rgba(255,255,255,.06);border-radius:24px;padding:44px 36px 40px;max-width:370px;width:100%;text-align:center;box-shadow:0 0 0 1px rgba(0,212,255,.04),0 40px 100px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04);animation:fadeUp .55s cubic-bezier(.16,1,.3,1) both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.login-brand{display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:4px;}
+.brand-shield{width:40px;height:40px;background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(139,92,246,.12));border:1px solid rgba(0,212,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,212,255,.1);}
+.login-logo{font-size:24px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#fff 25%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.login-sub{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.12em;margin-bottom:32px;text-transform:uppercase;}
+.input-wrap{position:relative;margin-bottom:10px;}
+.login-input{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--b2);border-radius:10px;padding:13px 16px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border .2s,box-shadow .2s;-webkit-appearance:none;}
+.login-input:focus{border-color:rgba(0,212,255,.4);box-shadow:0 0 0 3px rgba(0,212,255,.06);}
+.login-btn{width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-family:var(--sans);font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(0,212,255,.18);letter-spacing:.02em;-webkit-appearance:none;}
+.login-btn:hover{box-shadow:0 6px 28px rgba(0,212,255,.32);transform:translateY(-1px)}
+.login-btn:active{transform:none}
+.login-err{color:var(--red);font-size:11px;font-family:var(--mono);margin-top:10px;min-height:16px}
+
+#app{display:none;min-height:100vh;position:relative;z-index:1}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:rgba(9,12,23,.96);border-right:1px solid rgba(255,255,255,.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:50;display:flex;flex-direction:column;overflow-y:auto;transition:transform .32s cubic-bezier(.16,1,.3,1);}
+@media(max-width:768px){.sidebar{width:270px;transform:translateX(-100%);box-shadow:8px 0 40px rgba(0,0,0,.6);} .sidebar.open{transform:translateX(0)}}
+#sidebar-overlay{display:none;position:fixed;inset:0;z-index:49;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);}
+@media(max-width:768px){#sidebar-overlay.show{display:block}}
+.main{margin-left:var(--sidebar);padding:28px;min-height:100vh;}
+@media(max-width:768px){.main{margin-left:0;padding:16px;padding-top:calc(var(--header) + 12px);padding-bottom:calc(var(--bottom-nav) + 16px);}}
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:var(--header);background:rgba(6,8,16,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.04);z-index:48;align-items:center;justify-content:space-between;padding:0 16px;}
+@media(max-width:768px){.mobile-header{display:flex}}
+.mobile-brand{font-size:17px;font-weight:800;background:linear-gradient(135deg,#fff,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hamburger{background:none;border:1px solid var(--b2);border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--text);font-size:16px;transition:border-color .2s;}
+.hamburger:hover{border-color:var(--cyan)}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bottom-nav);background:rgba(6,8,16,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.04);z-index:48;align-items:center;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom,0px);}
+@media(max-width:768px){.bottom-nav{display:flex}}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;cursor:pointer;color:var(--muted);transition:color .2s;font-size:8px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;}
+.bnav-item.active{color:var(--cyan)}
+.bnav-icon{font-size:17px;line-height:1}
+.sb-header{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.sb-brand{display:flex;align-items:center;gap:10px}
+.sb-shield{width:34px;height:34px;background:linear-gradient(135deg,rgba(0,212,255,.1),rgba(139,92,246,.1));border:1px solid rgba(0,212,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.sb-logo{font-size:16px;font-weight:800;letter-spacing:-.3px;background:linear-gradient(135deg,#fff,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sb-tag{font-size:8px;color:var(--muted);font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-top:1px;}
+.sb-nav{flex:1;padding:10px 0}
+.nav-section{font-size:8px;color:var(--dim);font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:16px 18px 8px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;border-left:2px solid transparent;color:var(--muted);font-size:13px;font-weight:500;transition:all .18s;}
+.nav-item:hover{background:rgba(255,255,255,.025);color:var(--text)}
+.nav-item.active{background:rgba(0,212,255,.06);color:var(--cyan);border-left-color:var(--cyan);}
+.nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
+.sb-footer{padding:14px 18px;border-top:1px solid rgba(255,255,255,.04)}
+.server-status{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:statusPulse 2.5s ease-in-out infinite;}
+@keyframes statusPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,160,.4)}50%{opacity:.5;box-shadow:0 0 0 5px rgba(0,229,160,.0)}}
+.logout-btn{display:flex;align-items:center;gap:7px;width:100%;padding:8px 12px;border-radius:9px;border:1px solid var(--b2);background:transparent;color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* PAGE */
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
+.page-title{font-size:21px;font-weight:800;letter-spacing:-.4px}
+.page-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;letter-spacing:.04em;}
+.hdr-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+@media(max-width:960px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.stat-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+.stat-card{background:var(--s2);border:1px solid rgba(255,255,255,.04);border-radius:var(--r);padding:16px;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;}
+.stat-card:hover{border-color:rgba(255,255,255,.08);transform:translateY(-1px)}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.02),transparent);pointer-events:none;}
+.stat-label{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.stat-val{font-size:30px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.stat-icon{position:absolute;right:14px;top:14px;font-size:18px;opacity:.12}
+@media(max-width:480px){.stat-val{font-size:24px}}
+
+.c-blue{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.c-purple{background:linear-gradient(135deg,var(--purple),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.c-green{background:linear-gradient(135deg,var(--green),#00b0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.c-amber{color:var(--amber)}
+.c-red{color:var(--red)}
+
+/* CARD */
+.card{background:var(--s2);border:1px solid rgba(255,255,255,.04);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
+.card-hdr{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.card-body{padding:16px 18px}
+.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:768px){.section-grid{grid-template-columns:1fr}}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{padding:8px 14px;text-align:left;font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s;}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:10px 14px;color:var(--text);font-size:12px;vertical-align:middle;}
+.ip-cell{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.mono{font-family:var(--mono)}
+
+/* URL ITEM */
+.url-item{background:var(--s2);border:1px solid rgba(255,255,255,.04);border-radius:var(--r);padding:16px;margin-bottom:12px;transition:border-color .2s;}
+.url-item:hover{border-color:rgba(255,255,255,.08)}
+.url-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.url-label{font-size:14px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.url-token{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;}
+.url-actions{display:flex;gap:6px;flex-shrink:0}
+.url-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.url-stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
+.url-stat{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.url-stat strong{color:var(--text)}
+.url-copylink{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;border:1px solid rgba(0,212,255,.14);background:rgba(0,212,255,.04);cursor:pointer;font-size:11px;color:var(--cyan);font-family:var(--mono);transition:all .2s;}
+.url-copylink:hover{border-color:rgba(0,212,255,.35);background:rgba(0,212,255,.08)}
+.copy-hint{font-size:8px;letter-spacing:.1em;color:var(--muted);flex-shrink:0;text-transform:uppercase;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:9px;font-family:var(--mono);letter-spacing:.05em;font-weight:700;white-space:nowrap;}
+.b-green{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.b-red{background:rgba(255,77,109,.1);color:var(--red);border:1px solid rgba(255,77,109,.2);}
+.b-amber{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+.b-cyan{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2);}
+.b-gray{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid rgba(255,255,255,.08);}
+.b-violet{background:rgba(139,92,246,.1);color:var(--violet);border:1px solid rgba(139,92,246,.2);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none;}
+.btn:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.07)}
+.btn-primary{background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(139,92,246,.15));border-color:rgba(0,212,255,.3);color:var(--cyan);}
+.btn-primary:hover{background:linear-gradient(135deg,rgba(0,212,255,.25),rgba(139,92,246,.25));border-color:rgba(0,212,255,.5);}
+.btn-danger{border-color:rgba(255,77,109,.25);color:var(--red);background:rgba(255,77,109,.07);}
+.btn-danger:hover{border-color:rgba(255,77,109,.5);background:rgba(255,77,109,.12)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--muted);}
+.btn-ghost:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.btn-sm{padding:6px 11px;font-size:11px;border-radius:7px;}
+
+/* FORMS */
+.form-row{display:flex;gap:12px;margin-bottom:14px;}
+.form-row.full{flex-direction:column}
+.form-group{flex:1}
+.form-label{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
+input[type=text],input[type=url],input[type=password]{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--b2);border-radius:9px;padding:11px 14px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border .2s;-webkit-appearance:none;}
+input:focus{border-color:rgba(0,212,255,.4);box-shadow:0 0 0 3px rgba(0,212,255,.06);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.toggle-label{font-size:12px;color:var(--muted)}
+.toggle{width:38px;height:20px;border-radius:10px;border:none;background:var(--b2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;}
+.toggle.on{background:linear-gradient(135deg,var(--cyan),var(--violet));}
+.toggle.on::after{transform:translateX(18px);}
+
+/* CHARTS */
+.tl-wrap{display:flex;align-items:flex-end;gap:3px;height:70px;padding:0 2px;}
+.tl-bar{flex:1;background:linear-gradient(180deg,var(--cyan),rgba(0,212,255,.3));border-radius:3px 3px 0 0;transition:opacity .2s;cursor:pointer;min-width:4px;}
+.tl-bar:hover{opacity:.7}
+.tl-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--muted);font-family:var(--mono);}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.bar-label{font-size:10px;color:var(--muted);font-family:var(--mono);width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.bar-track{flex:1;height:7px;background:var(--b1);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.16,1,.3,1);}
+.bar-val{font-size:10px;color:var(--muted);font-family:var(--mono);width:28px;text-align:right;flex-shrink:0;}
+
+/* HOURLY CHART */
+.hourly-wrap{display:flex;align-items:flex-end;gap:2px;height:60px;}
+.hourly-bar{flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--violet),rgba(139,92,246,.3));min-width:3px;transition:opacity .2s;cursor:pointer;}
+.hourly-bar:hover{opacity:.7}
+.hourly-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:8px;color:var(--muted);font-family:var(--mono);}
+
+/* API KEY */
+.apikey-item{background:var(--s2);border:1px solid rgba(255,255,255,.04);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.apikey-key{font-family:var(--mono);font-size:11px;color:var(--cyan);word-break:break-all;margin:8px 0;padding:8px 10px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);border-radius:8px;}
+
+/* CODE BLOCK */
+.code-block{background:#050710;border:1px solid var(--b2);border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;white-space:pre;overflow-x:auto;}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--muted);}
+.ei{font-size:32px;opacity:.3}
+.empty p{font-size:12px;font-family:var(--mono);text-align:center;line-height:1.6;}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--muted);font-family:var(--mono);font-size:12px;}
+.spin{display:inline-block;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
+#modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .25s;}
+#modal.open{opacity:1;pointer-events:all;}
+.modal-card{background:var(--s1);border:1px solid var(--b2);border-radius:20px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;animation:modalUp .3s cubic-bezier(.16,1,.3,1) both;}
+@keyframes modalUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+.modal-close{background:none;border:1px solid var(--b2);border-radius:7px;padding:5px 9px;cursor:pointer;color:var(--muted);font-size:14px;transition:all .2s;}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+
+/* TOASTS */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-size:12px;font-family:var(--mono);animation:toastIn .3s cubic-bezier(.16,1,.3,1);pointer-events:all;min-width:200px;}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.t-ok{background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.25);color:var(--green);}
+.t-err{background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.25);color:var(--red);}
+.t-info{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);color:var(--cyan);}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-shield">
+        <svg width="20" height="20" viewBox="0 0 36 36" fill="none">
+          <path d="M18 3L4 9V21C4 28.8 10.4 35.3 18 37C25.6 35.3 32 28.8 32 21V9L18 3Z" fill="rgba(0,212,255,0.08)" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M12 18L16 22L24 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="login-logo">TeamDev</span>
+    </div>
+    <div class="login-sub">Admin Panel v3.0</div>
+    <div class="input-wrap">
+      <input class="login-input" type="password" id="pwd-input" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="sidebar" id="sidebar">
+    <div class="sb-header">
+      <div class="sb-brand">
+        <div class="sb-shield">
+          <svg width="18" height="18" viewBox="0 0 36 36" fill="none">
+            <path d="M18 3L4 9V21C4 28.8 10.4 35.3 18 37C25.6 35.3 32 28.8 32 21V9L18 3Z" fill="rgba(0,212,255,0.08)" stroke="#00d4ff" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M12 18L16 22L24 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="sb-logo">TeamDev</div>
+          <div class="sb-tag">Proxy Admin</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="gotoPage('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+      <div class="nav-item" onclick="gotoPage('urls')"><span class="nav-icon">⛓</span>Links</div>
+      <div class="nav-item" onclick="gotoPage('apikeys')"><span class="nav-icon">⚿</span>API Keys</div>
+      <div class="nav-section">Security</div>
+      <div class="nav-item" onclick="gotoPage('visits')"><span class="nav-icon">◎</span>Visits</div>
+      <div class="nav-item" onclick="gotoPage('blocked')"><span class="nav-icon">⊘</span>Blocked IPs</div>
+      <div class="nav-item" onclick="gotoPage('bots')"><span class="nav-icon">⚡</span>Bot Logs</div>
+      <div class="nav-section">Config</div>
+      <div class="nav-item" onclick="gotoPage('settings')"><span class="nav-icon">⚙</span>Settings</div>
+    </nav>
+    <div class="sb-footer">
+      <div class="server-status"><span class="status-dot"></span>Server Online</div>
+      <button class="logout-btn" onclick="logout()">⎋ &nbsp;Sign Out</button>
+    </div>
+  </div>
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="mobile-header">
+    <span class="mobile-brand">TeamDev</span>
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  </div>
+
+  <div class="main" id="main"></div>
+
+  <nav class="bottom-nav">
+    <div class="bnav-item active" onclick="gotoPage('dashboard')"><span class="bnav-icon">◈</span>Dash</div>
+    <div class="bnav-item" onclick="gotoPage('urls')"><span class="bnav-icon">⛓</span>Links</div>
+    <div class="bnav-item" onclick="gotoPage('apikeys')"><span class="bnav-icon">⚿</span>APIs</div>
+    <div class="bnav-item" onclick="gotoPage('blocked')"><span class="bnav-icon">⊘</span>Block</div>
+    <div class="bnav-item" onclick="gotoPage('settings')"><span class="bnav-icon">⚙</span>Settings</div>
+  </nav>
+</div>
+
+<div id="modal">
+  <div class="modal-card">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-title">Modal</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+let PWD = '';
+let curPage = 'dashboard';
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('show');}
+
+async function doLogin(){
+  const pwd=document.getElementById('pwd-input').value.trim();
+  if(!pwd)return;
+  const errEl=document.getElementById('login-err');
+  errEl.textContent='';
+  const btn=document.querySelector('.login-btn');
+  btn.textContent='Checking...';btn.disabled=true;
+  try{
+    const r=await fetch(`/admin/stats?password=${encodeURIComponent(pwd)}`);
+    if(!r.ok){errEl.textContent='✗ Wrong password';btn.textContent='Sign In';btn.disabled=false;return;}
+    PWD=pwd;
+    const ls=document.getElementById('login-screen');
+    ls.style.opacity='0';ls.style.transition='opacity .4s';
+    setTimeout(()=>{ls.style.display='none';document.getElementById('app').style.display='block';gotoPage('dashboard');},380);
+  }catch(e){errEl.textContent='✗ Connection failed';btn.textContent='Sign In';btn.disabled=false;}
+}
+function logout(){PWD='';location.reload();}
+
+const PAGE_NAV_MAP={dashboard:0,urls:1,apikeys:2,visits:3,blocked:4,bots:5,settings:6};
+const BNAV_PAGES=['dashboard','urls','apikeys','blocked','settings'];
+
+function gotoPage(page){
+  curPage=page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const navEls=document.querySelectorAll('.nav-item');
+  const idx=PAGE_NAV_MAP[page];
+  if(navEls[idx])navEls[idx].classList.add('active');
+  document.querySelectorAll('.bnav-item').forEach(el=>el.classList.remove('active'));
+  const bIdx=BNAV_PAGES.indexOf(page);
+  const bEls=document.querySelectorAll('.bnav-item');
+  if(bEls[bIdx>=0?bIdx:0])bEls[bIdx>=0?bIdx:0].classList.add('active');
+  closeSidebar();
+  const pages={dashboard:renderDashboard,urls:renderURLs,apikeys:renderAPIKeys,visits:renderVisits,blocked:renderBlocked,bots:renderBots,settings:renderSettings};
+  pages[page]?.();
+}
+
+async function api(endpoint,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify({...body,password:PWD});
+  const r=await fetch(endpoint,opts);
+  if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.detail||`HTTP ${r.status}`);}
+  return r.json();
+}
+
+function setMain(html){
+  const el=document.getElementById('main');
+  el.style.opacity='0';el.style.transition='opacity .18s';
+  setTimeout(()=>{el.innerHTML=html;el.style.opacity='1';},140);
+}
+
+function toast(msg,type='ok'){
+  const el=document.createElement('div');
+  el.className=`toast t-${type}`;
+  const icons={ok:'✓',err:'✗',info:'◎'};
+  el.innerHTML=`<span>${icons[type]||'◎'}</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3200);
+}
+
+function ts(d){if(!d)return '—';return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function copyText(txt){navigator.clipboard.writeText(txt).then(()=>toast('Copied!','info'));}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function openModal(title,bodyHtml){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=bodyHtml;
+  document.getElementById('modal').classList.add('open');
+}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+function statusBadge(s){
+  const map={success:['b-green','✓ Success'],blocked:['b-red','⊘ Blocked'],bot:['b-amber','⚡ Bot'],captcha_fail:['b-red','✗ CapFail'],captcha_pending:['b-cyan','⟳ Pending']};
+  const [cls,label]=map[s]||['b-gray',s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+/* ── DASHBOARD ─────────────────────────────────────────────────────────────── */
+async function renderDashboard(){
+  document.getElementById('main').innerHTML='<div class="loading"><span class="spin">⟳</span> Loading dashboard...</div>';
+  try{
+    const d=await api(`/admin/stats?password=${encodeURIComponent(PWD)}`);
+    const s=d.summary||{};
+    // 7-day timeline
+    const tl=d.timeline||[];
+    const maxTL=Math.max(...tl.map(x=>x.count),1);
+    const tlBars=tl.map(x=>`<div class="tl-bar" style="height:${Math.max(4,(x.count/maxTL)*70)}px" title="${x._id}: ${x.count} visits"></div>`).join('');
+    const tlLabels=tl.length?[tl[0],tl[Math.floor(tl.length/2)],tl[tl.length-1]].filter(Boolean).map(x=>`<span>${x._id?.slice(5)||''}</span>`).join(''):'';
+    // Hourly
+    const hr=d.hourly||[];
+    const maxHR=Math.max(...hr.map(x=>x.count),1);
+    const hrArr=Array.from({length:24},(_,i)=>{const f=hr.find(x=>x._id===i);return f?f.count:0;});
+    const hrBars=hrArr.map((v,i)=>`<div class="hourly-bar" style="height:${Math.max(2,(v/maxHR)*60)}px" title="${i}:00 — ${v} visits"></div>`).join('');
+    const hrLabels=['00','06','12','18','23'].map(h=>`<span>${h}h</span>`).join('');
+    // Bar charts
+    const barChart=(items,grad)=>{
+      if(!items?.length)return '<div class="empty"><p>No data yet</p></div>';
+      const max=Math.max(...items.map(x=>x.count),1);
+      return items.map(x=>`<div class="bar-row"><div class="bar-label">${x._id||'?'}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.count/max)*100}%;background:${grad}"></div></div><div class="bar-val">${x.count}</div></div>`).join('');
+    };
+    const stColors={success:'var(--green)',blocked:'var(--red)',bot:'var(--amber)',captcha_fail:'var(--red)',captcha_pending:'var(--cyan)'};
+    const stBars=(d.statuses||[]).map(x=>{const max=Math.max(...(d.statuses||[]).map(y=>y.count),1);return `<div class="bar-row"><div class="bar-label" style="width:90px">${x._id||'?'}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.count/max)*100}%;background:${stColors[x._id]||'var(--cyan)'}"></div></div><div class="bar-val">${x.count}</div></div>`;}).join('')||'<div class="empty"><p>No data</p></div>';
+    const topIPRows=(d.top_ips||[]).slice(0,8).map(x=>`<tr><td><span class="ip-cell">${x._id}</span></td><td class="mono">${x.count}</td><td><button class="btn btn-danger btn-sm" onclick="blockIPPrompt('${x._id}')">Block</button></td></tr>`).join('');
+    // Bot reasons
+    const botReasons=(d.bot_reasons||[]).slice(0,6).map(x=>{const max=Math.max(...(d.bot_reasons||[]).map(y=>y.count),1);return `<div class="bar-row"><div class="bar-label" style="width:120px;font-size:9px">${(x._id||'unknown').slice(0,18)}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.count/max)*100}%;background:linear-gradient(90deg,var(--amber),var(--red))"></div></div><div class="bar-val">${x.count}</div></div>`;}).join('')||'<div class="empty"><p>No bot data</p></div>';
+    setMain(`
+      <div class="page-hdr">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Real-time analytics overview</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="renderDashboard()">⟳ Refresh</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Total Links</div><div class="stat-val c-blue">${s.total_urls||0}</div><div class="stat-icon">⛓</div></div>
+        <div class="stat-card"><div class="stat-label">Total Clicks</div><div class="stat-val c-purple">${s.total_clicks||0}</div><div class="stat-icon">◎</div></div>
+        <div class="stat-card"><div class="stat-label">Verified</div><div class="stat-val c-green">${s.total_visits||0}</div><div class="stat-icon">✓</div></div>
+        <div class="stat-card"><div class="stat-label">Bots Caught</div><div class="stat-val c-amber">${s.total_bots||0}</div><div class="stat-icon">⚡</div></div>
+        <div class="stat-card"><div class="stat-label">Blocked</div><div class="stat-val c-red">${s.total_blocked||0}</div><div class="stat-icon">⊘</div></div>
+        <div class="stat-card"><div class="stat-label">Cap. Fails</div><div class="stat-val c-red">${s.total_captcha_fails||0}</div><div class="stat-icon">✗</div></div>
+      </div>
+      <div class="section-grid">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">7-Day Visit Timeline</div></div>
+          <div class="card-body">
+            ${tl.length?`<div class="tl-wrap">${tlBars}</div><div class="tl-labels">${tlLabels}</div>`:'<div class="empty"><p>No visit data yet</p></div>'}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Today Hourly (Verified)</div></div>
+          <div class="card-body">
+            ${hr.length?`<div class="hourly-wrap">${hrBars}</div><div class="hourly-labels">${hrLabels}</div>`:'<div class="empty"><p>No data today</p></div>'}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Devices</div></div>
+          <div class="card-body">${barChart(d.devices,'linear-gradient(90deg,var(--violet),var(--cyan))')}</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Browsers</div></div>
+          <div class="card-body">${barChart(d.browsers,'linear-gradient(90deg,var(--blue),var(--purple))')}</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Visit Statuses</div></div>
+          <div class="card-body">${stBars}</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Bot Detection Reasons</div></div>
+          <div class="card-body">${botReasons}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Top IPs</div></div>
+        <div class="card-body" style="padding:0">
+          ${topIPRows?`<div class="tbl-wrap"><table><thead><tr><th>IP Address</th><th>Hits</th><th></th></tr></thead><tbody>${topIPRows}</tbody></table></div>`:'<div class="empty"><p>No data</p></div>'}
+        </div>
+      </div>
+    `);
+  }catch(e){setMain(`<div class="empty"><div class="ei">⚠</div><p>${e.message}</p></div>`);}
+}
+
+/* ── URLS ─────────────────────────────────────────────────────────────────── */
+async function renderURLs(){
+  document.getElementById('main').innerHTML='<div class="loading"><span class="spin">⟳</span> Loading links...</div>';
+  try{
+    const urls=await api(`/admin/go-links?password=${encodeURIComponent(PWD)}`);
+    const now=Date.now();
+    const items=urls.map(u=>{
+      const shortUrl=u.short_url||'';
+      const isPermanent=u.permanent||!u.expires;
+      const expired=!isPermanent&&new Date(u.expires).getTime()<now;
+      const expiryLabel=isPermanent?'<span class="badge b-cyan">∞ Permanent</span>':expired?'<span class="badge b-red">Expired</span>':`<span class="badge b-amber">⏱ Expires ${ts(u.expires)}</span>`;
+      return `<div class="url-item">
+        <div class="url-top">
+          <div style="flex:1;min-width:0">
+            <div class="url-label">${u.label||'(No label)'}</div>
+            <div class="url-token">${u.token?.slice(0,16)}…${u.token?.slice(-6)}</div>
+          </div>
+          <div class="url-actions">
+            <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteURL('${u.token}','${(u.label||'').replace(/'/g,"\\'")}')">✕</button>
+          </div>
+        </div>
+        <div class="url-meta">
+          ${expired?'<span class="badge b-red">● Expired</span>':'<span class="badge b-green">● Active</span>'}
+          ${expiryLabel}
+          <span class="badge b-gray">${ts(u.created)}</span>
+        </div>
+        <div class="url-copylink" onclick="copyText('${shortUrl}')">
+          <span>⛓</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortUrl}</span>
+          <span class="copy-hint">TAP TO COPY</span>
+        </div>
+      </div>`;
+    }).join('');
+    setMain(`
+      <div class="page-hdr">
+        <div><div class="page-title">Manage Links</div><div class="page-sub">${urls.length} link${urls.length!==1?'s':''} total</div></div>
+        <div class="hdr-actions">
+          <button class="btn btn-ghost btn-sm" onclick="renderURLs()">⟳</button>
+          <button class="btn btn-primary" onclick="openAddURL()">+ Add Link</button>
+        </div>
+      </div>
+      ${items||'<div class="empty"><div class="ei">⛓</div><p>No links yet.<br>Click "+ Add Link" to create one.</p></div>'}
+    `);
+  }catch(e){setMain(`<div class="empty"><div class="ei">⚠</div><p>${e.message}</p></div>`);}
+}
+
+function openAddURL(){
+  openModal('Add New Link',`
+    <div class="form-row full"><div class="form-group">
+      <div class="form-label">Label / Name</div>
+      <input type="text" id="nl" placeholder="e.g. Main Redirect"/>
+    </div></div>
+    <div class="form-row full"><div class="form-group">
+      <div class="form-label">Target URL (hidden from users)</div>
+      <input type="url" id="nu" placeholder="https://example.com/..."/>
+    </div></div>
+    <div class="form-row full"><div class="form-group">
+      <div class="form-label">Link Expiry</div>
+      <select id="ne" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:#0b0d18;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
+        <option value="0">∞ Permanent (never expires)</option>
+        <option value="1">1 Hour</option>
+        <option value="2">2 Hours</option>
+        <option value="3">3 Hours</option>
+        <option value="6">6 Hours</option>
+        <option value="12">12 Hours</option>
+        <option value="24">24 Hours (1 Day)</option>
+        <option value="48">48 Hours (2 Days)</option>
+        <option value="72">72 Hours (3 Days)</option>
+        <option value="168">1 Week</option>
+        <option value="720">30 Days</option>
+      </select>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono)">Permanent links can only be deleted from admin panel</div>
+    </div></div>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="submitAddURL()">Generate & Add</button>
+    </div>
+  `);
+}
+
+async function submitAddURL(){
+  const label=document.getElementById('nl').value.trim();
+  const url=document.getElementById('nu').value.trim();
+  const expiryHours=parseInt(document.getElementById('ne').value)||0;
+  if(!url){toast('Target URL is required','err');return;}
+  try{
+    const r=await api('/admin/add-url','POST',{label,target_url:url,captcha_enabled:true,expiry_hours:expiryHours||null});
+    closeModal();toast(`Link created! Expiry: ${r.expiry}`,'ok');
+    setTimeout(()=>{copyText(r.url);toast('Short URL copied','info');},400);
+    renderURLs();
+  }catch(e){toast(e.message,'err');}
+}
+
+async function toggleURL(token,active){
+  try{await api('/admin/toggle-url','POST',{token,active});toast(active?'Link enabled':'Link disabled','ok');renderURLs();}catch(e){toast(e.message,'err');}
+}
+
+async function deleteURL(token,label){
+  if(!confirm(`Delete "${label||token.slice(0,14)+'...'}"\nThis will remove all visit logs too.`))return;
+  try{await api('/admin/delete-url','POST',{token});toast('Link deleted','ok');renderURLs();}catch(e){toast(e.message,'err');}
+}
+
+async function viewURLDetails(token){
+  openModal('Link Analytics','<div class="loading"><span class="spin">⟳</span></div>');
+  try{
+    const d=await api(`/admin/url-details?token=${token}&password=${encodeURIComponent(PWD)}`);
+    const u=d.url;
+    const visits=d.visits||[];
+    const rows=visits.slice(0,20).map(v=>`<tr><td><span class="ip-cell">${v.ip}</span></td><td>${statusBadge(v.status)}</td><td class="mono" style="color:var(--muted)">${v.device||'?'}</td><td class="mono" style="color:var(--muted)">${ts(v.ts)}</td></tr>`).join('');
+    document.getElementById('modal-body').innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        ${[['Clicks',u.stats?.clicks||0,'c-purple'],['Visits',u.stats?.visits||0,'c-green'],['Bots',u.stats?.bots||0,'c-amber'],['Blocked',u.stats?.blocked||0,'c-red']].map(([l,v,c])=>`<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:14px;text-align:center"><div style="font-size:26px;font-weight:800;letter-spacing:-1px" class="${c}">${v}</div><div style="font-size:8px;color:var(--muted);font-family:var(--mono);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${l}</div></div>`).join('')}
+      </div>
+      <div class="url-copylink" onclick="copyText('${u.short_url}')">
+        <span>⛓</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px">${u.short_url}</span><span class="copy-hint">COPY</span>
+      </div>
+      <div style="margin-top:16px;font-size:8px;color:var(--muted);font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase">Recent Visits (${visits.length})</div>
+      ${rows?`<div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>IP</th><th>Status</th><th>Device</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty" style="padding:16px"><p>No visits yet</p></div>'}
+    `;
+  }catch(e){document.getElementById('modal-body').innerHTML=`<p style="color:var(--red);font-family:var(--mono);font-size:12px;padding:4px">${e.message}</p>`;}
+}
+
+/* ── API KEYS ──────────────────────────────────────────────────────────────── */
+async function renderAPIKeys(){
+  document.getElementById('main').innerHTML='<div class="loading"><span class="spin">⟳</span> Loading API keys...</div>';
+  try{
+    const keys=await api(`/admin/apikeys?password=${encodeURIComponent(PWD)}`);
+    const baseUrl=window.location.origin;
+    const items=keys.map(k=>`
+      <div class="apikey-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
+          <div>
+            <div style="font-size:14px;font-weight:700">${k.label||'Unnamed Key'}</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px">Created ${ts(k.created)} &nbsp;·&nbsp; Used ${k.usage||0}x${k.last_used?` &nbsp;·&nbsp; Last ${ts(k.last_used)}`:''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            ${k.active?`<button class="btn btn-ghost btn-sm" onclick="toggleAPIKey('${k.key}',false)">⏸ Pause</button>`:`<button class="btn btn-primary btn-sm" onclick="toggleAPIKey('${k.key}',true)">▶ Enable</button>`}
+            <button class="btn btn-danger btn-sm" onclick="deleteAPIKey('${k.key}','${(k.label||'').replace(/'/g,"\\'")}')">✕</button>
+          </div>
+        </div>
+        <div class="apikey-key" onclick="copyText('${k.key}')" style="cursor:pointer" title="Click to copy">
+          ${k.key}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          ${k.active?'<span class="badge b-green">● Active</span>':'<span class="badge b-red">● Paused</span>'}
+          <span class="badge b-gray">Usage: ${k.usage||0}</span>
+        </div>
+        <div style="margin-top:10px;padding:8px 10px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1);border-radius:8px;font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all">
+          ${baseUrl}/api?api=${k.key}&amp;url=YOUR_URL&amp;expiry=24&amp;format=json<br><span style="color:var(--muted);font-size:10px">&amp;expiry=0 or omit for permanent | &amp;expiry=1/2/3/24 for hours</span>
+        </div>
+      </div>
+    `).join('');
+    setMain(`
+      <div class="page-hdr">
+        <div><div class="page-title">API Keys</div><div class="page-sub">${keys.length} key${keys.length!==1?'s':''} · Use for /api endpoint</div></div>
+        <div class="hdr-actions">
+          <button class="btn btn-ghost btn-sm" onclick="renderAPIKeys()">⟳</button>
+          <button class="btn btn-primary" onclick="openCreateAPIKey()">+ Create Key</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr"><div class="card-title">API Usage Format</div></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">GET request format:</div>
+          <div class="code-block">${window.location.origin}/api?api={YOUR_API_KEY}&url={TARGET_URL}&format=json</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:10px">Response: <code style="font-family:var(--mono);font-size:10px;color:var(--cyan)">{"status":"success","shortenedUrl":"..."}</code></div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);font-family:var(--mono)">If <code style="color:var(--cyan)">api</code> param is omitted, the endpoint still works (unauthenticated mode).</div>
+        </div>
+      </div>
+      ${items||'<div class="empty"><div class="ei">⚿</div><p>No API keys yet.<br>Create one to use the /api endpoint.</p></div>'}
+    `);
+  }catch(e){setMain(`<div class="empty"><div class="ei">⚠</div><p>${e.message}</p></div>`);}
+}
+
+function openCreateAPIKey(){
+  openModal('Create API Key',`
+    <div class="form-row full"><div class="form-group">
+      <div class="form-label">Label</div>
+      <input type="text" id="akl" placeholder="e.g. My Bot, Production Key"/>
+    </div></div>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="submitCreateAPIKey()">Generate Key</button>
+    </div>
+  `);
+}
+
+async function submitCreateAPIKey(){
+  const label=document.getElementById('akl').value.trim();
+  if(!label){toast('Label is required','err');return;}
+  try{
+    const r=await api('/admin/create-apikey','POST',{label});
+    closeModal();toast('API key created!','ok');
+    setTimeout(()=>{copyText(r.key);toast('Key copied to clipboard','info');},300);
+    renderAPIKeys();
+  }catch(e){toast(e.message,'err');}
+}
+
+async function deleteAPIKey(key,label){
+  if(!confirm(`Delete key "${label||key.slice(0,20)+'...'}"\nThis cannot be undone.`))return;
+  try{await api('/admin/delete-apikey','POST',{key});toast('API key deleted','ok');renderAPIKeys();}catch(e){toast(e.message,'err');}
+}
+
+async function toggleAPIKey(key,active){
+  try{await api('/admin/toggle-apikey','POST',{key,active});toast(active?'Key enabled':'Key paused','ok');renderAPIKeys();}catch(e){toast(e.message,'err');}
+}
+
+/* ── VISITS ───────────────────────────────────────────────────────────────── */
+async function renderVisits(){
+  document.getElementById('main').innerHTML='<div class="loading"><span class="spin">⟳</span> Loading visits...</div>';
+  try{
+    const visits=await api(`/admin/visits?password=${encodeURIComponent(PWD)}&limit=100`);
+    const rows=visits.map(v=>`<tr>
+      <td><span class="ip-cell">${v.ip}</span></td>
+      <td>${statusBadge(v.status)}</td>
+      <td><span class="badge b-gray">${v.device||'?'}</span></td>
+      <td><span class="badge b-gray">${v.browser||'?'}</span></td>
+      <td><span class="badge b-gray">${v.os||'?'}</span></td>
+      <td class="mono" style="color:var(--muted)">${ts(v.ts)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="blockIPPrompt('${v.ip}')">Block</button></td>
+    </tr>`).join('');
+    setMain(`
+      <div class="page-hdr">
+        <div><div class="page-title">All Visits</div><div class="page-sub">Latest 100 requests</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="renderVisits()">⟳ Refresh</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          ${rows?`<div class="tbl-wrap"><table><thead><tr><th>IP</th><th>Status</th><th>Device</th><th>Browser</th><th>OS</th><th>Time</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty"><div class="ei">◎</div><p>No visits yet</p></div>'}
+        </div>
+      </div>
+    `);
+  }catch(e){setMain(`<div class="empty"><div class="ei">⚠</div><p>${e.message}</p></div>`);}
+}
+
+/* ── BLOCKED ──────────────────────────────────────────────────────────────── */
+async function renderBlocked(){
+  document.getElementById('main').innerHTML='<div class="loading"><span class="spin">⟳</span> Loading...</div>';
+  try{
+    const ips=await api(`/admin/blocked-ips?password=${encodeURIComponent(PWD)}`);
+    const rows=ips.map(b=>`<tr>
+      <td><span class="ip-cell">${b.ip}</span></td>
+      <td style="color:var(--muted);font-size:11px">${b.reason||'—'}</td>
+      <td class="mono" style="color:var(--muted)">${ts(b.ts)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="unblockIP('${b.ip}')">✓ Unblock</button></td>
+    </tr>`).join('');
+    setMain(`
+      <div class="page-hdr">
+        <div><div class="page-title">Blocked IPs</div><div class="page-sub">${ips.length} IP${ips.length!==1?'s':''} on blocklist</div></div>
+        <div class="hdr-actions">
+          <button class="btn btn-ghost btn-sm" onclick="renderBlocked()">⟳</button>
+          <button class="btn btn-danger" onclick="blockIPPrompt('')">+ Block IP</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          ${rows?`<div class="tbl-wrap"><table><thead><tr><th>IP Address</th><th>Reason</th><th>Blocked At</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty"><div class="ei">✓</div><p>No blocked IPs</p></div>'}
+        </div>
+      </div>
+    `);
+  }catch(e){setMain(`<div class="empty"><p>${e.message}</p></div>`);}
+}
+
+function blockIPPrompt(ip=''){
+  openModal('Block IP Address',`
+    <div class="form-row full"><div class="form-group">
+      <div class="form-label">IP Address</div>
+      <input type="text" id="bip" value="${ip}" placeholder="192.168.1.1"/>
+    </div></div>
+    <div class="form-row full"><div class="form-group">
+      <div class="form-label">Reason (optional)</div>
+      <input type="text" id="brs" placeholder="e.g. Repeated bot activity"/>
+    </div></div>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" style="flex:2" onclick="submitBlock()">Block IP</button>
+    </div>
+  `);
+}
+
+async function submitBlock(){
+  const ip=document.getElementById('bip').value.trim();
+  const reason=document.getElementById('brs').value.trim();
+  if(!ip){toast('IP is required','err');return;}
+  try{await api('/admin/block-ip','POST',{ip,reason});closeModal();toast('IP blocked','ok');renderBlocked();}catch(e){toast(e.message,'err');}
+}
+
+async function unblockIP(ip){
+  if(!confirm(`Unblock ${ip}?`))return;
+  try{await api('/admin/unblock-ip','POST',{ip});toast('IP unblocked','ok');renderBlocked();}catch(e){toast(e.message,'err');}
+}
+
+/* ── BOTS ────────────────────────────────────────────────────────────────── */
+async function renderBots(){
+  document.getElementById('main').innerHTML='<div class="loading"><span class="spin">⟳</span> Loading bot logs...</div>';
+  try{
+    const visits=await api(`/admin/visits?password=${encodeURIComponent(PWD)}&limit=200`);
+    const bots=visits.filter(v=>v.status==='bot'||v.status==='blocked');
+    const rows=bots.map(v=>`<tr>
+      <td><span class="ip-cell">${v.ip}</span></td>
+      <td>${statusBadge(v.status)}</td>
+      <td class="mono" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px" title="${v.ua}">${(v.ua||'').slice(0,55)}…</td>
+      <td style="color:var(--muted);font-size:11px">${v.reason||'—'}</td>
+      <td class="mono" style="color:var(--muted)">${ts(v.ts)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="blockIPPrompt('${v.ip}')">Block</button></td>
+    </tr>`).join('');
+    setMain(`
+      <div class="page-hdr">
+        <div><div class="page-title">Bot Logs</div><div class="page-sub">${bots.length} automated requests detected</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="renderBots()">⟳ Refresh</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          ${rows?`<div class="tbl-wrap"><table><thead><tr><th>IP</th><th>Status</th><th>User Agent</th><th>Reason</th><th>Time</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty"><div class="ei">✓</div><p>No bots detected yet</p></div>'}
+        </div>
+      </div>
+    `);
+  }catch(e){setMain(`<div class="empty"><p>${e.message}</p></div>`);}
+}
+
+/* ── SETTINGS ────────────────────────────────────────────────────────────── */
+function renderSettings(){
+  const origin=window.location.origin;
+  setMain(`
+    <div class="page-hdr">
+      <div><div class="page-title">Settings</div><div class="page-sub">Server config & deploy guide</div></div>
+    </div>
+    <div class="section-grid">
+
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-hdr">
+          <div class="card-title">🔗 Shortener API Config</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">URL shortener se pehle short karo, fir hamara verification wrap hoga</div>
+        </div>
+        <div class="card-body">
+          <div id="shortener-status-bar" style="margin-bottom:14px;padding:10px 13px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);font-family:var(--mono)">Loading current config...</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Shortener API Endpoint URL</div>
+              <input id="s-url" type="text" placeholder="https://mdiskshortner.link/api" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--mono);font-size:12px;outline:none"/>
+              <div style="font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono)">Sirf base URL (without params). e.g. https://mdiskshortner.link/api</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Shortener API Key</div>
+              <input id="s-key" type="text" placeholder="b668187cbcd93947..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--mono);font-size:12px;outline:none"/>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input id="s-enabled" type="checkbox" checked style="width:15px;height:15px;cursor:pointer;accent-color:var(--cyan)"/>
+              <label for="s-enabled" style="font-size:12px;color:var(--muted);cursor:pointer">Enable shortener (uncheck to bypass shortener, direct wrap only)</label>
+            </div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);padding:9px 12px;border-radius:8px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1)">
+              <b style="color:var(--cyan)">Flow:</b> User URL → Shortener API → Shortened URL → Hamara /go verification wrap → Final Link
+            </div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05)">
+              <b style="color:var(--text)">Example shortener call:</b><br>
+              <span style="color:var(--cyan)">${origin}/api?api={YOUR_API_KEY}&url=https://destination.com&format=json</span><br><br>
+              <b style="color:var(--text)">Response:</b><br>
+              <span style="color:#00e5a0">{"status":"success","message":"","shortenedUrl":"${origin}/go?t=..."}</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="saveShortenerConfig()" style="padding:9px 20px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-weight:700;font-size:13px;cursor:pointer">Save Config</button>
+              <button onclick="clearShortenerConfig()" style="padding:9px 18px;border-radius:9px;border:1px solid rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;font-weight:600;font-size:12px;cursor:pointer">Clear / Disable</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Heroku Environment Variables</div></div>
+        <div class="card-body">
+          ${[
+            ['MONGO_URL','MongoDB Atlas connection string','Required'],
+            ['HCAPTCHA_SITEKEY','hCaptcha public site key','Required'],
+            ['HCAPTCHA_SECRET','hCaptcha secret key','Required'],
+            ['ADMIN_PASSWORD','Admin panel password','Required'],
+            ['BASE_URL','Your Heroku app URL, e.g. https://app.herokuapp.com','Required'],
+            ['PORT','Set automatically by Heroku','Auto'],
+          ].map(([k,v,badge])=>`
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+              <div>
+                <div style="font-size:11px;font-family:var(--mono);color:var(--cyan)">${k}</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">${v}</div>
+              </div>
+              <span class="badge ${badge==='Auto'?'b-gray':'b-amber'}">${badge}</span>
+            </div>`).join('')}
+          <div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.15);font-size:10px;color:var(--amber);font-family:var(--mono)">
+            ⚠ Set these via: <b>heroku config:set KEY=value</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">API Endpoint</div></div>
+        <div class="card-body">
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Format</div>
+          <div class="code-block">${origin}/api?api={API_KEY}&url={URL}&format=json</div>
+          <div style="margin-top:12px;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Example Response</div>
+          <div class="code-block">{"status":"success","message":"","shortenedUrl":"${origin}/go?t=..."}</div>
+          <div style="margin-top:12px;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Error Response</div>
+          <div class="code-block">{"status":"error","message":["reason"],"shortenedUrl":""}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Security Features</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:9px">
+            ${[
+              ['hCaptcha Verification','ON'],
+              ['Bot UA Detection','35+ patterns'],
+              ['Header Anomaly Detection','ON'],
+              ['IP Blocklist','Manual + Auto'],
+              ['Session Expiry','2 hours'],
+              ['Missing Accept-Language block','ON'],
+              ['Missing Accept header block','ON'],
+              ['Short UA block (<20 chars)','ON'],
+              ['Non-Mozilla prefix block','ON'],
+            ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--muted)">${k}</span><span class="badge b-green">${v}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Heroku Deploy Guide</div></div>
+        <div class="card-body">
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Step 1 — Set config vars</div>
+          <div class="code-block">heroku config:set MONGO_URL="mongodb+srv://..."
+heroku config:set HCAPTCHA_SITEKEY="your_key"
+heroku config:set HCAPTCHA_SECRET="your_secret"
+heroku config:set ADMIN_PASSWORD="YourPassword"
+heroku config:set BASE_URL="https://your-app.herokuapp.com"</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em">Step 2 — Deploy</div>
+          <div class="code-block">git add .
+git commit -m "deploy"
+git push heroku main</div>
+          <div style="margin-top:12px;padding:9px 12px;border-radius:8px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);font-size:10px;color:var(--cyan);font-family:var(--mono)">
+            ◎ Procfile: <b>web: uvicorn server:app --host 0.0.0.0 --port $PORT</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+  loadShortenerConfig();
+}
+
+async function loadShortenerConfig(){
+  try{
+    const cfg=await api(`/admin/shortener-config?password=${encodeURIComponent(PWD)}`);
+    const bar=document.getElementById('shortener-status-bar');
+    if(cfg.shortener_url){
+      bar.style.background='rgba(0,229,160,.05)';
+      bar.style.border='1px solid rgba(0,229,160,.2)';
+      bar.style.color='#00e5a0';
+      bar.innerHTML=`✓ Shortener configured — <b>${cfg.shortener_url}</b> | Status: <b>${cfg.enabled?'Enabled':'Disabled'}</b>`;
+    }else{
+      bar.innerHTML='ℹ No shortener configured. URLs will be directly wrapped with verification.';
+    }
+    document.getElementById('s-url').value=cfg.shortener_url||'';
+    document.getElementById('s-key').value=cfg.shortener_api_key||'';
+    document.getElementById('s-enabled').checked=cfg.enabled!==false;
+  }catch(e){
+    const bar=document.getElementById('shortener-status-bar');
+    if(bar) bar.innerHTML='⚠ Could not load config: '+e.message;
+  }
+}
+
+async function saveShortenerConfig(){
+  const sUrl=document.getElementById('s-url').value.trim();
+  const sKey=document.getElementById('s-key').value.trim();
+  const enabled=document.getElementById('s-enabled').checked;
+  if(!sUrl||!sKey){toast('Shortener URL aur API Key dono required hain','err');return;}
+  try{
+    await api('/admin/shortener-config','POST',{shortener_url:sUrl,shortener_api_key:sKey,enabled,password:PWD});
+    toast('Shortener config saved ✓','ok');
+    loadShortenerConfig();
+  }catch(e){toast(e.message,'err');}
+}
+
+async function clearShortenerConfig(){
+  if(!confirm('Shortener config clear karo? URLs directly wrap honge without shortening.'))return;
+  try{
+    await api('/admin/shortener-config/clear','POST',{password:PWD});
+    toast('Shortener config cleared','ok');
+    document.getElementById('s-url').value='';
+    document.getElementById('s-key').value='';
+    document.getElementById('s-enabled').checked=true;
+    loadShortenerConfig();
+  }catch(e){toast(e.message,'err');}
+}
+</script>
+</body>
+</html>
