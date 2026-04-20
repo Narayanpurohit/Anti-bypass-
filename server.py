@@ -20,11 +20,11 @@ from pydantic import BaseModel
 from typing import Optional
 
 # Don't Make Any Config Changes Here!
-MONGO_URL        = os.environ.get("MONGO_URL",        "mongodb://localhost:27017")
+MONGO_URL        = os.environ.get("MONGO_URL",        "mongodb+srv://Rename_1by1_robot:4lYZVWmtpiAUopqq@cluster0.r7y7j.mongodb.net/?appName=Cluster0")
 HCAPTCHA_SECRET  = os.environ.get("HCAPTCHA_SECRET",  "")
 HCAPTCHA_SITEKEY = os.environ.get("HCAPTCHA_SITEKEY", "")
 ADMIN_PASSWORD   = os.environ.get("ADMIN_PASSWORD",   "TeamDev@Admin2025")
-BASE_URL         = os.environ.get("BASE_URL",         "http://localhost:8000").rstrip("/")
+BASE_URL         = os.environ.get("BASE_URL",         "http://www.nkurl.online").rstrip("/")
 PORT             = int(os.environ.get("PORT",         8000))
 
 _mongo     = AsyncIOMotorClient(MONGO_URL)
