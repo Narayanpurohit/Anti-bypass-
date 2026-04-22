@@ -370,60 +370,11 @@ function showError(msg) {{
 </html>"""
 
 
+from fastapi.responses import HTMLResponse
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return """
-<!DOCTYPE html>
-<html>
-<head>
-  <title>TeamDev</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #050816;
-      color: white;
-      text-align: center;
-    }
-
-    header {
-      padding: 20px;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    span {
-      color: #38bdf8;
-    }
-
-    .main {
-      margin-top: 100px;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background: #38bdf8;
-      color: white;
-      cursor: pointer;
-    }
-  </style>
-</head>
-
-<body>
-
-  <header>Team<span>Dev</span></header>
-
-  <div class="main">
-    <h1>Welcome</h1>
-    <p>Simple home page</p>
-    <button>Get Started</button>
-  </div>
-
-</body>
-</html>
-"""
+    return "<h1>Hello</h1>"
 
 @app.get("/health")
 async def health():
