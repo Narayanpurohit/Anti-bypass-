@@ -10,8 +10,10 @@ A FastAPI-based link-protection and redirect service with browser-header bot scr
 - Link workflows
 - Requirements and configuration
 - MongoDB and hCaptcha setup
-- Ubuntu 24.04 VPS deployment
-- Docker and Procfile deployment
+- Ubuntu 22.04 VPS deployment
+- Heroku deployment
+- Render deployment
+- Docker deployment
 - Public and admin API reference
 - Admin dashboard
 - Database collections
@@ -155,9 +157,9 @@ The application creates collection records as needed; manual collection creation
 
 The site key is public and used in the browser. Keep the secret key server-side only. The domain configured in hCaptcha must match the hostname visitors use.
 
-## Deploy on Ubuntu 24.04 VPS
+## Deploy on Ubuntu 22.04 VPS (also compatible with Ubuntu 24.04)
 
-This is the recommended deployment path for a VPS. The example values are:
+This guide targets Ubuntu 22.04 LTS. The commands also work on Ubuntu 24.04 with the matching Python 3 package. Ubuntu 22.04 provides Python 3.10 by default, which is suitable for this project. The example values are:
 
 - Domain: links.example.com
 - Project directory: /opt/anti-bypass
@@ -335,23 +337,134 @@ The current Dockerfile starts the application with python server.py, which launc
 
 For production, place Nginx or another trusted HTTPS reverse proxy in front of the container. Do not publish the application directly to the public internet without HTTPS and appropriate access controls.
 
-## Deploy on a platform using the Procfile
+## Deploy on Heroku
 
-A Procfile is included:
+The repository already includes a root-level Procfile:
 
 ~~~procfile
 web: uvicorn server:app --host 0.0.0.0 --port $PORT
 ~~~
 
-For a platform that supports Procfile-based Python deployments:
+Heroku uses this web process to start FastAPI and route incoming HTTP traffic. The application must listen on the port provided by Heroku through the PORT environment variable.
 
-1. Create a new application.
-2. Configure all required environment variables in the platform dashboard.
-3. Set BASE_URL to the public HTTPS application URL.
-4. Deploy the repository's main branch.
-5. Check deployment logs and open /health.
+### Option A — Deploy from GitHub
 
-The included app.json is a Heroku-style manifest. Review its values and replace sample/default credentials before use. Do not treat it as a secure production configuration.
+1. Sign in to [Heroku](https://www.heroku.com/).
+2. Create a new Heroku app from the Heroku Dashboard.
+3. Open the app's **Deploy** tab.
+4. Connect the GitHub account and select the `Narayanpurohit/Anti-bypass-` repository.
+5. Select the `main` branch and deploy it.
+6. Open the app's **Settings → Config Vars** and add all required variables listed in the Configuration section.
+7. Set `BASE_URL` to the HTTPS URL assigned to your Heroku app, for example `https://YOUR-APP-NAME.herokuapp.com`. Confirm the exact hostname in the Heroku dashboard.
+8. Trigger a redeploy after setting the configuration values, if required.
+9. Open `https://YOUR-APP-NAME.herokuapp.com/health`. A healthy deployment should return `{"ok":true}`.
+
+### Option B — Deploy using Heroku CLI
+
+Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) and Git, then run these commands from a local clone of the repository:
+
+~~~bash
+heroku login
+heroku create YOUR-UNIQUE-APP-NAME
+heroku config:set MONGO_URL="YOUR_MONGODB_URI"
+heroku config:set HCAPTCHA_SITEKEY="YOUR_HCAPTCHA_SITE_KEY"
+heroku config:set HCAPTCHA_SECRET="YOUR_HCAPTCHA_SECRET"
+heroku config:set ADMIN_PASSWORD="YOUR_LONG_RANDOM_PASSWORD"
+heroku config:set BASE_URL="https://YOUR-APP-NAME.herokuapp.com"
+git push heroku main
+heroku logs --tail
+~~~
+
+Replace every placeholder with a real value. If the Heroku app already exists, connect the current repository to it instead of running `heroku create`:
+
+~~~bash
+heroku git:remote -a YOUR-APP-NAME
+git push heroku main
+~~~
+
+After deployment, verify:
+
+~~~bash
+heroku open
+heroku logs --tail
+~~~
+
+The app's `BASE_URL` must match its actual public HTTPS hostname. If you add a custom domain later, update `BASE_URL` and register that hostname in hCaptcha.
+
+**Heroku notes:**
+
+- Keep `Procfile` in the repository root with the exact filename and no extension.
+- Keep `requirements.txt` in the repository root so the Python build process can install dependencies.
+- Do not upload a local `.env` file or commit secrets. Use Heroku Config Vars.
+- The included `app.json` is a Heroku-style manifest, but review all sample/default values before using any one-click deployment flow.
+- Heroku's Git deployment documentation: https://devcenter.heroku.com/articles/git
+- Heroku Python deployment guide: https://devcenter.heroku.com/articles/getting-started-with-python
+
+## Deploy on Render
+
+Render can deploy this FastAPI application directly from the GitHub repository as a **Web Service**.
+
+### 1. Create a Web Service
+
+1. Sign in to [Render](https://render.com/).
+2. Click **New → Web Service**.
+3. Connect your GitHub account if it is not connected already.
+4. Select the `Narayanpurohit/Anti-bypass-` repository.
+5. Select the `main` branch.
+
+### 2. Configure the service
+
+Use these settings:
+
+| Setting | Value |
+|---|---|
+| Name | `anti-bypass` (or your preferred service name) |
+| Runtime / Language | Python 3 |
+| Branch | `main` |
+| Root Directory | Leave blank |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn server:app --host 0.0.0.0 --port $PORT` |
+| Health Check Path | `/health` |
+
+Choose a suitable instance plan for your expected traffic. The free web service plan may spin down after a period of inactivity, so the first request after idle time can take longer to respond. Check Render's current plan limits before production use.
+
+### 3. Add environment variables
+
+Open the service's **Environment** tab and add:
+
+| Key | Value |
+|---|---|
+| `MONGO_URL` | Your MongoDB connection URI |
+| `HCAPTCHA_SITEKEY` | Your hCaptcha site key |
+| `HCAPTCHA_SECRET` | Your hCaptcha secret |
+| `ADMIN_PASSWORD` | A strong, unique admin password |
+| `BASE_URL` | Your Render HTTPS URL, e.g. `https://YOUR-SERVICE.onrender.com` |
+| `PORT` | Usually do not set manually; Render provides it |
+
+Save the variables and let Render redeploy the service. Register the Render hostname in your hCaptcha site configuration.
+
+### 4. Verify the deployment
+
+When the deployment completes, open:
+
+- `https://YOUR-SERVICE.onrender.com/`
+- `https://YOUR-SERVICE.onrender.com/health`
+- `https://YOUR-SERVICE.onrender.com/admin`
+
+The health endpoint should return `{"ok":true}`.
+
+### 5. Automatic deployments
+
+By default, Render can automatically deploy new commits pushed to the connected branch. Push changes to `main` and monitor the service's **Events** and **Logs** tabs if a deployment fails.
+
+**Render notes:**
+
+- Use a **Web Service**, not a Static Site, because FastAPI runs a server.
+- Do not commit `.env` or secrets. Add them through the Render Environment dashboard.
+- MongoDB must be reachable from Render. Configure MongoDB Atlas network access appropriately.
+- Render's free instances can spin down after inactivity; check current availability, limits, and pricing before relying on the service.
+- Official guides: https://render.com/docs/deploy-fastapi and https://render.com/docs/configure-environment-variables
+- Health checks: https://render.com/docs/health-checks
 
 ## API reference
 
