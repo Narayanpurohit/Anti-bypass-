@@ -1,5 +1,10 @@
 """Environment-based application settings. Never commit production credentials."""
 import os
+from dotenv import load_dotenv
+
+# Load values from the project-root .env file when present; existing VPS
+# environment variables take precedence over values in the file.
+load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 HCAPTCHA_SECRET = os.getenv("HCAPTCHA_SECRET", "")
