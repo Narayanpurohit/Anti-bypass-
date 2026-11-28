@@ -6,10 +6,9 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
 async def root():
-    home_file = os.path.join(os.path.dirname(__file__), "templates", "home.html")
+    home_file = Path(__file__).resolve().parents[2] / "templates" / "home.html"
     try:
-        with open(home_file, "r", encoding="utf-8") as page:
-            return HTMLResponse(page.read())
+        return HTMLResponse(home_file.read_text(encoding="utf-8"))
     except FileNotFoundError:
         return HTMLResponse("<h1>Home page is not configured.</h1>", status_code=500)
 
