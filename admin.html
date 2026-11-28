@@ -985,6 +985,34 @@ async function clearShortenerConfig(){
     loadShortenerConfig();
   }catch(e){toast(e.message,'err');}
 }
+function htmlSafe(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+async function renderUsers(){
+  setMain('<div class="loading"><span class="spin">⟳</span> Loading users...</div>');
+  try{
+    const users=await api('/admin/users');
+    const rows=users.map(function(u){
+      const active=Number(u.is_active)===1;
+      return '<tr><td><b>'+htmlSafe(u.username)+'</b><div style="color:var(--muted);font-size:10px">'+htmlSafe(u.email)+'</div></td><td>'+htmlSafe(u.role)+'</td><td><span class="badge '+(active?'b-green':'b-red')+'">'+(active?'Active':'Suspended')+'</span></td><td>'+(u.total_links||0)+'</td><td>'+(u.total_visits||0)+'</td><td>'+ts(u.created_at)+'</td><td><div style="display:flex;gap:5px"><button class="btn btn-ghost btn-sm" onclick="toggleUser('+u.id+','+(active?'0':'1')+')">'+(active?'Suspend':'Activate')+'</button><button class="btn btn-danger btn-sm" onclick="deleteUser('+u.id+')">Delete</button></div></td></tr>';
+    }).join('');
+    setMain('<div class="page-hdr"><div><div class="page-title">User Management</div><div class="page-sub">'+users.length+' accounts · Manage user access and activity</div></div><button class="btn btn-primary btn-sm" onclick="openCreateUser()">＋ Create User</button></div><div class="card"><div class="card-body" style="padding:0"><div class="tbl-wrap"><table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Links</th><th>Visits</th><th>Joined</th><th>Actions</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7">No users found.</td></tr>')+'</tbody></table></div></div></div>');
+  }catch(e){setMain('<div class="empty"><p>'+htmlSafe(e.message)+'</p></div>');}
+}
+function openCreateUser(){
+  openModal('Create User','<div style="display:grid;gap:10px"><input id="new-username" placeholder="Username" style="width:100%;padding:11px;border-radius:9px;background:#0b1220;color:white;border:1px solid #2b3852"><input id="new-email" type="email" placeholder="Email address" style="width:100%;padding:11px;border-radius:9px;background:#0b1220;color:white;border:1px solid #2b3852"><input id="new-password" type="password" placeholder="Temporary password (10+ characters)" style="width:100%;padding:11px;border-radius:9px;background:#0b1220;color:white;border:1px solid #2b3852"><button class="btn btn-primary" onclick="submitNewUser()">Create User</button></div>');
+}
+async function submitNewUser(){
+  try{await api('/admin/users/create','POST',{username:document.getElementById('new-username').value,email:document.getElementById('new-email').value,password:document.getElementById('new-password').value});closeModal();toast('User created successfully','ok');renderUsers();}
+  catch(e){toast(e.message,'err');}
+}
+async function toggleUser(id,active){
+  if(!confirm(active?'Activate this user?':'Suspend this user?'))return;
+  try{await api('/admin/users/toggle','POST',{id:id,active:!!Number(active)});toast('User status updated','ok');renderUsers();}catch(e){toast(e.message,'err');}
+}
+async function deleteUser(id){
+  if(!confirm('Delete this user and all of their links, analytics, API keys and settings? This cannot be undone.'))return;
+  try{await api('/admin/users/delete','POST',{id:id});toast('User deleted','ok');renderUsers();}catch(e){toast(e.message,'err');}
+}
+
 window.addEventListener('DOMContentLoaded',async()=>{try{const r=await fetch('/auth/me');if(r.ok){const d=await r.json();USER=d.user;enterDashboard();}}catch(e){}});
 </script>
 </body>
