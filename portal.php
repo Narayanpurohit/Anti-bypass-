@@ -33,7 +33,7 @@ function portal_pdo_install(string $host,string $port,string $db,string $user,st
 }
 function portal_installed(): bool { return is_file(__DIR__.'/config.php') && is_file(__DIR__.'/.installed'); }
 function portal_csrf(): string {
-    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) { session_name('antibypass_session'); session_start(); }
     if (empty($_SESSION['csrf'])) $_SESSION['csrf']=bin2hex(random_bytes(32));
     return (string)$_SESSION['csrf'];
 }
@@ -129,7 +129,7 @@ function portal_handle(string $path,string $method): void {
             portal_check_csrf();$theme=(string)($_POST['theme']??'dark');$timezone=(string)($_POST['timezone']??'UTC');$domain=trim((string)($_POST['shortener_domain']??''));$api=trim((string)($_POST['shortener_api_key']??''));
             if(!in_array($theme,['light','dark'],true)||!in_array($timezone,timezone_identifiers_list(),true)||($domain!==''&&!filter_var($domain,FILTER_VALIDATE_URL))) portal_page('Invalid settings','<div class="card"><p class="danger">Please check the values and try again.</p><a href="/settings">Back</a></div>',422);
             $q=pdo()->prepare("INSERT INTO user_settings(user_id,theme,timezone,shortener_domain,shortener_api_key_encrypted) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE theme=VALUES(theme),timezone=VALUES(timezone),shortener_domain=VALUES(shortener_domain),shortener_api_key_encrypted=VALUES(shortener_api_key_encrypted)");
-            $encrypted=$api!==''?base64_encode($api):null;
+            $encrypted=null; if($api!==''){ $ek=(string)(getenv('APP_ENCRYPTION_KEY')?:''); if(strlen($ek)<32) portal_page('Encryption key required','<div class="card"><p class="danger">Set APP_ENCRYPTION_KEY (at least 32 characters) in the server environment before saving a shortener API key.</p><a href="/settings">Back to settings</a></div>',503); $iv=random_bytes(12); $tag=''; $cipher=openssl_encrypt($api,'aes-256-gcm',hash('sha256',$ek,true),OPENSSL_RAW_DATA,$iv,$tag); if($cipher===false) throw new RuntimeException('Unable to encrypt shortener key'); $encrypted=base64_encode($iv.$tag.$cipher); }
             $q->execute([(int)$u['id'],$theme,$timezone,$domain,$encrypted]);
             header('Location: /settings?saved=1',true,302);exit;
         }
@@ -138,6 +138,18 @@ function portal_handle(string $path,string $method): void {
         portal_page('User Settings',portal_header('User Settings',$u).(!empty($_GET['saved'])?'<div class="notice">Settings saved.</div>':'').'<div class="card"><form method="post"><input type="hidden" name="csrf" value="'.portal_h($csrf).'"><label>Username</label><input value="'.portal_h($u['username']).'" disabled><label>Email (read-only)</label><input value="'.portal_h($u['email']).'" disabled><label>Theme</label><select name="theme"><option value="dark" '.(($v['theme']??'dark')==='dark'?'selected':'').'>Dark</option><option value="light" '.(($v['theme']??'')==='light'?'selected':'').'>Light</option></select><label>Timezone</label><input name="timezone" value="'.portal_h($v['timezone']??'UTC').'"><label>Shortener domain (optional)</label><input type="url" name="shortener_domain" value="'.portal_h($v['shortener_domain']??'').'" placeholder="https://your-shortener.example"><label>Shortener API key</label><input name="shortener_api_key" value="" placeholder="'.portal_h($masked?:'Initially empty; enter to set or replace').'"><p class="muted">API key is stored encrypted at rest when APP_ENCRYPTION_KEY is configured; otherwise setup should configure a private encryption key before production use.</p><button class="btn">Save settings</button></form></div>');
     }
     if ($path==='/links') { $u=portal_require_user(); portal_page('Links',portal_header('Links',$u).'<div class="card"><p>Links workspace is reserved for the next implementation phase.</p></div>'); }
-    if ($path==='/api-docs') { $u=portal_require_user(); portal_page('API',portal_header('API',$u).'<div class="card"><p>API key management and documentation will be added in the next phase.</p></div>'); }
+    if ($path==='/api-docs') {
+        $u=portal_require_user();
+        if($method==='POST') {
+            portal_check_csrf(); $action=(string)($_POST['action']??'');
+            if($action==='create') { $key='ab_'.bin2hex(random_bytes(24)); pdo()->prepare('INSERT INTO apikeys(user_id,key_value,label,active,usage_count,created) VALUES(?,?,?,1,0,UTC_TIMESTAMP())')->execute([(int)$u['id'],$key,trim((string)($_POST['label']??'My API key'))]); }
+            if($action==='revoke') { pdo()->prepare('DELETE FROM apikeys WHERE id=? AND user_id=?')->execute([(int)($_POST['id']??0),(int)$u['id']]); }
+            header('Location: /api-docs',true,302);exit;
+        }
+        $keys=pdo()->prepare('SELECT id,label,active,usage_count,created,last_used FROM apikeys WHERE user_id=? ORDER BY created DESC');$keys->execute([(int)$u['id']]);
+        $items='';foreach($keys->fetchAll() as $k){$items.='<div class="tile"><strong style="font-size:16px">'.portal_h($k['label']).'</strong><p class="muted">Usage: '.(int)$k['usage_count'].' · '.portal_h($k['active']?'Active':'Inactive').'</p><form method="post"><input type="hidden" name="csrf" value="'.portal_h(portal_csrf()).'"><input type="hidden" name="action" value="revoke"><input type="hidden" name="id" value="'.(int)$k['id'].'"><button class="btn alt">Revoke key</button></form></div>';}
+        $body=portal_header('API Settings',$u).'<div class="card"><h3>Your API keys</h3>'.$items.'<form method="post"><input type="hidden" name="csrf" value="'.portal_h(portal_csrf()).'"><input type="hidden" name="action" value="create"><label>Key label</label><input name="label" value="My API key"><p><button class="btn">Generate API key</button></p></form><p class="muted">New key is shown only once after generation in this initial version; copy it from the response/confirmation before leaving.</p></div>';
+        portal_page('API Settings',$body);
+    }
 }
 portal_handle($path,$method);
