@@ -817,125 +817,17 @@ async function renderBots(){
 /* ── SETTINGS ────────────────────────────────────────────────────────────── */
 function renderSettings(){
   const origin=window.location.origin;
-  setMain(`
-    <div class="page-hdr">
-      <div><div class="page-title">Settings</div><div class="page-sub">Server config & deploy guide</div></div>
-    </div>
-    <div class="section-grid">
-
-      <div class="card" style="grid-column:1/-1">
-        <div class="card-hdr">
-          <div class="card-title">🔗 Shortener API Config</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">URL shortener se pehle short karo, fir hamara verification wrap hoga</div>
-        </div>
-        <div class="card-body">
-          <div id="shortener-status-bar" style="margin-bottom:14px;padding:10px 13px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);font-family:var(--mono)">Loading current config...</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <div>
-              <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Shortener API Endpoint URL</div>
-              <input id="s-url" type="text" placeholder="https://mdiskshortner.link/api" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--mono);font-size:12px;outline:none"/>
-              <div style="font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono)">Sirf base URL (without params). e.g. https://mdiskshortner.link/api</div>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Shortener API Key</div>
-              <input id="s-key" type="text" placeholder="b668187cbcd93947..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--mono);font-size:12px;outline:none"/>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input id="s-enabled" type="checkbox" checked style="width:15px;height:15px;cursor:pointer;accent-color:var(--cyan)"/>
-              <label for="s-enabled" style="font-size:12px;color:var(--muted);cursor:pointer">Enable shortener (uncheck to bypass shortener, direct wrap only)</label>
-            </div>
-            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);padding:9px 12px;border-radius:8px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1)">
-              <b style="color:var(--cyan)">Flow:</b> User URL → Shortener API → Shortened URL → Hamara /go verification wrap → Final Link
-            </div>
-            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05)">
-              <b style="color:var(--text)">Example shortener call:</b><br>
-              <span style="color:var(--cyan)">${origin}/api?api={YOUR_API_KEY}&url=https://destination.com&format=json</span><br><br>
-              <b style="color:var(--text)">Response:</b><br>
-              <span style="color:#00e5a0">{"status":"success","message":"","shortenedUrl":"${origin}/go?t=..."}</span>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button onclick="saveShortenerConfig()" style="padding:9px 20px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-weight:700;font-size:13px;cursor:pointer">Save Config</button>
-              <button onclick="clearShortenerConfig()" style="padding:9px 18px;border-radius:9px;border:1px solid rgba(255,77,109,.3);background:rgba(255,77,109,.06);color:#ff4d6d;font-weight:600;font-size:12px;cursor:pointer">Clear / Disable</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">Heroku Environment Variables</div></div>
-        <div class="card-body">
-          ${[
-            ['MONGO_URL','MongoDB Atlas connection string','Required'],
-            ['HCAPTCHA_SITEKEY','hCaptcha public site key','Required'],
-            ['HCAPTCHA_SECRET','hCaptcha secret key','Required'],
-            ['ADMIN_PASSWORD','Admin panel password','Required'],
-            ['BASE_URL','Your Heroku app URL, e.g. https://app.herokuapp.com','Required'],
-            ['PORT','Set automatically by Heroku','Auto'],
-          ].map(([k,v,badge])=>`
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.03)">
-              <div>
-                <div style="font-size:11px;font-family:var(--mono);color:var(--cyan)">${k}</div>
-                <div style="font-size:10px;color:var(--muted);margin-top:2px">${v}</div>
-              </div>
-              <span class="badge ${badge==='Auto'?'b-gray':'b-amber'}">${badge}</span>
-            </div>`).join('')}
-          <div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.15);font-size:10px;color:var(--amber);font-family:var(--mono)">
-            ⚠ Set these via: <b>heroku config:set KEY=value</b>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">API Endpoint</div></div>
-        <div class="card-body">
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Format</div>
-          <div class="code-block">${origin}/api?api={API_KEY}&url={URL}&format=json</div>
-          <div style="margin-top:12px;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Example Response</div>
-          <div class="code-block">{"status":"success","message":"","shortenedUrl":"${origin}/go?t=..."}</div>
-          <div style="margin-top:12px;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Error Response</div>
-          <div class="code-block">{"status":"error","message":["reason"],"shortenedUrl":""}</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">Security Features</div></div>
-        <div class="card-body">
-          <div style="display:flex;flex-direction:column;gap:9px">
-            ${[
-              ['hCaptcha Verification','ON'],
-              ['Bot UA Detection','35+ patterns'],
-              ['Header Anomaly Detection','ON'],
-              ['IP Blocklist','Manual + Auto'],
-              ['Session Expiry','2 hours'],
-              ['Missing Accept-Language block','ON'],
-              ['Missing Accept header block','ON'],
-              ['Short UA block (<20 chars)','ON'],
-              ['Non-Mozilla prefix block','ON'],
-            ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--muted)">${k}</span><span class="badge b-green">${v}</span></div>`).join('')}
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">Heroku Deploy Guide</div></div>
-        <div class="card-body">
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Step 1 — Set config vars</div>
-          <div class="code-block">heroku config:set MONGO_URL="mongodb+srv://..."
-heroku config:set HCAPTCHA_SITEKEY="your_key"
-heroku config:set HCAPTCHA_SECRET="your_secret"
-heroku config:set ADMIN_PASSWORD="YourPassword"
-heroku config:set BASE_URL="https://your-app.herokuapp.com"</div>
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em">Step 2 — Deploy</div>
-          <div class="code-block">git add .
-git commit -m "deploy"
-git push heroku main</div>
-          <div style="margin-top:12px;padding:9px 12px;border-radius:8px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);font-size:10px;color:var(--cyan);font-family:var(--mono)">
-            ◎ Procfile: <b>web: uvicorn server:app --host 0.0.0.0 --port $PORT</b>
-          </div>
-        </div>
-      </div>
-    </div>
-  `);
+  setMain('<div class="page-hdr"><div><div class="page-title">My Settings</div><div class="page-sub">Personal integrations and account details</div></div></div>'+
+  '<div class="section-grid">'+
+  '<div class="card" style="grid-column:1/-1"><div class="card-hdr"><div class="card-title">Personal URL Shortener</div><div style="font-size:10px;color:var(--muted);margin-top:3px">This configuration is private to your account.</div></div><div class="card-body">'+
+  '<div id="shortener-status-bar" style="margin-bottom:14px;padding:10px 13px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);font-family:var(--mono)">Loading current config...</div>'+
+  '<div style="display:flex;flex-direction:column;gap:10px"><div><div class="field-label">Shortener API Endpoint URL</div><input id="s-url" type="text" placeholder="https://example.com/api" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text)"></div>'+
+  '<div><div class="field-label">Shortener API Key</div><input id="s-key" type="password" placeholder="Your private API key" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text)"></div>'+
+  '<label style="font-size:12px;color:var(--muted)"><input id="s-enabled" type="checkbox" checked> Enable external shortener</label>'+
+  '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);padding:10px;border-radius:8px;background:rgba(0,212,255,.04)">Your URL → Your shortener → Anti Bypass verification link</div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveShortenerConfig()">Save My Settings</button><button class="btn btn-danger btn-sm" onclick="clearShortenerConfig()">Clear Config</button></div></div></div></div>'+
+  '<div class="card"><div class="card-hdr"><div class="card-title">Your API Endpoint</div></div><div class="card-body"><div class="code-block">'+origin+'/api?api={YOUR_API_KEY}&url={URL}&expiry=24</div><p style="color:var(--muted);font-size:11px;margin-top:10px">Your API keys and generated links belong to your account.</p></div></div>'+
+  '<div class="card"><div class="card-hdr"><div class="card-title">Account Details</div></div><div class="card-body"><div style="font-size:12px;color:var(--muted)">Username: <b style="color:var(--text)">'+(USER?USER.username:'')+'</b><br>Email: '+(USER?USER.email:'')+'<br>Role: '+(USER?USER.role:'user')+'</div></div></div></div>');
   loadShortenerConfig();
 }
 
