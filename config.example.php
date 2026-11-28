@@ -1,9 +1,0 @@
-<?php
-define('DB_HOST','localhost');
-define('DB_NAME','your_mysql_database');
-define('DB_USER','your_mysql_username');
-define('DB_PASS','your_mysql_password');
-define('ADMIN_PASSWORD','CHANGE_THIS_TO_A_LONG_RANDOM_PASSWORD');
-define('HCAPTCHA_SECRET','');
-define('HCAPTCHA_SITEKEY','');
-define('BASE_URL','https://your-domain.com');
