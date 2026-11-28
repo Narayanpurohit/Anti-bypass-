@@ -1,32 +1,39 @@
-# Project Context — Anti Bypass (PHP/MySQL)
+# Project Context — Anti Bypass (PHP + MySQL)
 
-> PHP shared-hosting conversion branch: main3
-> Original branch: main2 (unchanged)
+> Active migration branch: main3
+> Original Python/MongoDB branch: main2 (unchanged)
 
 ## Runtime
-The main3 branch is a PHP 8.1+ application using MySQL/MariaDB through PDO. It is designed for common cPanel/Apache shared hosting and does not require Python, FastAPI, MongoDB, Node.js, Docker, or a background worker.
+PHP 8.1+ with MySQL/MariaDB via PDO. Intended for Apache/cPanel shared hosting. No Python, FastAPI or MongoDB runtime is required.
 
-## Files
-- index.php — request router, protected-link flow, CAPTCHA verification, redirect flow, shortener API, admin APIs and analytics
-- config.example.php — sample database credentials, admin password, hCaptcha keys and public base URL
-- install.sql — tables for URLs, redirects, visits, temporary sessions, blocked IPs, API keys and settings
-- .htaccess — rewrite rules and protection for configuration and SQL files
-- admin.html — existing admin dashboard frontend
-- templates/home.html — public landing page
-- README.md — shared-hosting setup instructions
+## First-run installer
+- Opening the site before config.php exists displays a two-stage setup wizard.
+- Stage 1 validates MySQL host, database name, username and password.
+- Stage 2 creates the first Admin account from username, email and password, with optional hCaptcha keys.
+- The installer creates the SQL schema, writes config.php, assigns any unowned legacy MySQL records to the first Admin, and starts a session.
+- config.php is ignored by Git and blocked by .htaccess.
 
-## Install
-1. Upload files to public_html.
-2. Create a MySQL database and user in cPanel and grant database privileges.
-3. Import install.sql using phpMyAdmin.
-4. Copy config.example.php to config.php and enter hosting credentials.
-5. Set a strong admin password, hCaptcha secret/site key and HTTPS BASE_URL.
-6. Verify /health, then test /admin, link generation, CAPTCHA, redirects and analytics.
+## Accounts and dashboards
+- Email/password authentication uses PHP sessions and password_hash/password_verify.
+- The first account is role=admin.
+- Public sign-up is paused. Admins create normal user accounts in Admin Dashboard → User Management.
+- All users open the same dashboard UI. Admins can switch between their personal User Dashboard and platform-wide Admin Dashboard.
+- Admin Dashboard provides platform statistics and user management (create, activate, suspend, delete).
+- Each account owns its own links, visits, analytics, API keys, IP blocklist and shortener configuration.
+- Backend endpoints enforce ownership using user_id filters. Admin scope is allowed only to Admin role.
 
-## Data migration
-The SQL schema is new and does not import existing MongoDB records. Export and map MongoDB documents into the corresponding SQL tables before moving production traffic. Do not delete or overwrite the old main2 deployment during testing.
+## Main files
+- index.php — setup wizard, routing, login/logout, link flows, dashboard APIs and user-management endpoints
+- lib.php — PDO connection, schema installer/migration, authentication, per-user settings, visit logging and CAPTCHA helpers
+- admin.html — user dashboard and admin-mode dashboard UI
+- login.html — login page
+- signup.html — sign-up pause page
+- templates/home.html — public homepage
+- install.sql — reference schema; setup wizard installs automatically
+- .htaccess — rewrite rules and private-file protections
 
-## Scope and limitations
-The existing single-admin password flow is preserved to keep the current dashboard compatible. Public user registration, multiple user roles and per-user data isolation have not been implemented in this PHP conversion because those product decisions were not confirmed in the preceding discussion.
+## Migration
+Existing MySQL tables from the earlier PHP port are upgraded with user_id columns and assigned to the first Admin during setup. The old shared shortener setting is copied to the initial Admin's personal settings. Existing MongoDB records are not migrated automatically.
 
-The conversion has not yet been deployed to the user's shared host or exercised against their MySQL/hCaptcha credentials. Treat it as a migration build pending syntax checks and end-to-end hosting tests.
+## Validation status
+Code has been committed to main3. It has not yet been installed on a live shared host or tested with real MySQL/hCaptcha credentials. Run PHP lint and end-to-end tests on the target hosting before using it in production.
