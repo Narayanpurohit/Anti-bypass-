@@ -379,7 +379,31 @@ function toast(msg,type='ok'){
 }
 
 function ts(d){if(!d)return '—';return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
-function copyText(txt){navigator.clipboard.writeText(txt).then(()=>toast('Copied!','info'));}
+async function copyText(txt){
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(txt);
+    }else{
+      const field=document.createElement('textarea');
+      field.value=txt;
+      field.setAttribute('readonly','');
+      field.style.position='fixed';
+      field.style.opacity='0';
+      field.style.pointerEvents='none';
+      document.body.appendChild(field);
+      field.select();
+      field.setSelectionRange(0,field.value.length);
+      const copied=document.execCommand('copy');
+      field.remove();
+      if(!copied)throw new Error('Clipboard permission unavailable');
+    }
+    toast('Copied!','ok');
+    return true;
+  }catch(err){
+    toast('Copy failed. Please select and copy the link manually.','err');
+    return false;
+  }
+}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 function openModal(title,bodyHtml){
   document.getElementById('modal-title').textContent=title;
