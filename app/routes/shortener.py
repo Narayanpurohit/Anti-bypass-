@@ -79,7 +79,7 @@ async def protection_wrap(request: Request, url: str, api: str = "", format: str
         "expires":    expires_at,
         "permanent":  expires_at is None,
     })
-    short_url = f"{BASE_URL}/go?t={proxy_token}"
+    short_url = f"{BASE_URL}/r/{proxy_token}"
     return JSONResponse({
         "status":      "success",
         "message":     "",
