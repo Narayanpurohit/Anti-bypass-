@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from app.config import HCAPTCHA_SECRET
 from app.database import urls_col, sess_col, block_col, redir_col
-from app.core import TOKEN_LEN, PROXY_TOKEN_LEN, client_ip, detect_bot, log_visit, verify_html, _debug_page
+from app.core import TOKEN_LEN, PROXY_TOKEN_LEN, LEGACY_PROXY_TOKEN_LEN, client_ip, detect_bot, log_visit, verify_html, _debug_page
 router = APIRouter()
 
 @router.get("/token", response_class=HTMLResponse)
@@ -80,23 +80,35 @@ async def proxy(s: str, request: Request):
     await sess_col.update_one({"sid": s}, {"$set": {"used": True}})
     return RedirectResponse(url=session["target"], status_code=302)
 
-@router.get("/go")
-async def go_redirect(t: str, request: Request):
-    ua = request.headers.get("User-Agent", "")
-    ip = client_ip(request)
-    is_bot, reason = detect_bot(ua, request)
-    if is_bot:
-        raise HTTPException(403, "Access denied")
-    if await block_col.find_one({"ip": ip}):
-        raise HTTPException(403, "Access denied")
-    if len(t) != PROXY_TOKEN_LEN:
+async def _serve_go_link(t: str, request: Request):
+    if len(t) not in (PROXY_TOKEN_LEN, LEGACY_PROXY_TOKEN_LEN):
         raise HTTPException(404, "Invalid token")
     doc = await redir_col.find_one({"token": t})
     if not doc:
         raise HTTPException(404, "Link not found")
     if doc.get("expires") is not None and doc["expires"] < datetime.utcnow():
         raise HTTPException(410, "Link expired")
+    ua = request.headers.get("User-Agent", "")
+    ip = client_ip(request)
+    is_bot, reason = detect_bot(ua, request)
+    if is_bot:
+        await log_visit(t, request, "bot", reason)
+        raise HTTPException(403, "Access denied")
+    if await block_col.find_one({"ip": ip}):
+        await log_visit(t, request, "blocked", "IP blocklist")
+        raise HTTPException(403, "Access denied")
+    await log_visit(t, request, "captcha_pending")
     return HTMLResponse(verify_html(t, verify_endpoint="/api/go-verify"))
+
+
+@router.get("/r/{t}")
+async def go_redirect_short(t: str, request: Request):
+    return await _serve_go_link(t, request)
+
+
+@router.get("/go")
+async def go_redirect_legacy(t: str, request: Request):
+    return await _serve_go_link(t, request)
 
 
 @router.post("/api/go-verify")
@@ -104,7 +116,7 @@ async def go_verify(request: Request):
     body        = await request.json()
     cap_token   = body.get("cap", "")
     proxy_token = body.get("t", "")
-    if not cap_token or len(proxy_token) != PROXY_TOKEN_LEN:
+    if not cap_token or len(proxy_token) not in (PROXY_TOKEN_LEN, LEGACY_PROXY_TOKEN_LEN):
         raise HTTPException(400, "Missing fields")
     async with httpx.AsyncClient() as c:
         r = await c.post("https://hcaptcha.com/siteverify", data={
@@ -114,10 +126,12 @@ async def go_verify(request: Request):
         })
         result = r.json()
     if not result.get("success"):
+        await log_visit(proxy_token, request, "captcha_fail", str(result.get("error-codes", [])))
         return JSONResponse({"ok": False, "detail": "Captcha failed."}, status_code=403)
     doc = await redir_col.find_one({"token": proxy_token})
     if not doc:
         return JSONResponse({"ok": False, "detail": "Token not found."}, status_code=404)
     if doc.get("expires") is not None and doc["expires"] < datetime.utcnow():
         return JSONResponse({"ok": False, "detail": "Link expired."}, status_code=410)
+    await log_visit(proxy_token, request, "success")
     return {"ok": True, "redirect": doc["url"]}
