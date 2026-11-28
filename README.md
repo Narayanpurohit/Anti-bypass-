@@ -24,7 +24,7 @@ A FastAPI-based link-protection and redirect service with browser-header bot scr
 
 The application provides two distinct link flows:
 
-1. **Protected content flow — /token:** validates a 62-character token, checks whether the link is active, screens browser-like request headers, checks the IP blocklist, optionally requires hCaptcha, creates a temporary session, and streams the target page through the application's proxy endpoint.
+1. **Protected content flow — /token:** validates a 62-character token, checks whether the link is active, screens browser-like request headers, checks the IP blocklist, optionally requires hCaptcha, creates a temporary session, and redirects the visitor to the stored destination URL after session validation.
 2. **Redirect wrapper flow — /r/{token}:** validates an 8-character token, screens browser-like request headers, checks the IP blocklist and link expiry, requires hCaptcha, and then redirects the visitor to the stored destination URL. Legacy `/go?t={32-character-token}` links remain supported.
 
 The public **/api** endpoint creates links for the redirect-wrapper flow. An optional external URL shortener can be configured. When enabled, the destination is shortened first and the resulting URL is wrapped by this application.
@@ -478,7 +478,7 @@ The routes below are implemented by the current server.py. URL-encode query para
 | GET | /health | Health check; returns {"ok": true}. |
 | GET | /token?t=TOKEN | Starts protected-content flow; token must be 62 characters. |
 | POST | /api/verify | Verifies hCaptcha for /token and creates a two-hour session. |
-| GET | /p?s=SESSION_ID | Proxies/streams the target page for a valid session. |
+| GET | /p?s=SESSION_ID | Validates the temporary session and redirects to the stored target URL. |
 | GET | /api?url=URL&api=KEY&format=json&expiry=HOURS | Creates a /go wrapper. api is optional in the current code; if supplied, it is validated. |
 | GET | /r/TOKEN | Starts redirect-wrapper flow with an 8-character token. Legacy /go?t=TOKEN links (32-character tokens) remain supported. |
 | POST | /api/go-verify | Verifies hCaptcha for /go and returns the destination URL. |
