@@ -126,7 +126,7 @@ async def log_visit(token: str, req: Request, status: str, reason: str = ""):
         "captcha_pending": "stats.clicks",
     }
     field = stat_map.get(status, "stats.clicks")
-    extra = {"stats.clicks": 1} if status not in ("captcha_pending",) else {}
+    extra = {}
     update = {
         "$inc": {field: 1, **extra},
         "$set": {"last_visit": datetime.utcnow()},
