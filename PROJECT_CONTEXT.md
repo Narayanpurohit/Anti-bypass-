@@ -150,3 +150,16 @@ These are source-inspection findings, not claims that a live exploit or runtime 
 - Before changing a route, inspect its frontend callers in `admin.html` and its database document shape; keep API contracts consistent or update callers together.
 - Prefer small, testable changes and add automated tests for route behavior, token/session lifecycle, configuration, and admin authorization.
 - Do not claim a test passed unless it was actually run and its result observed.
+
+
+## 11. Latest maintenance update (2026-11-28)
+
+- Admin dashboard link copying now uses the Clipboard API on secure contexts and a textarea fallback on ordinary HTTP origins.
+- Newly generated redirect tokens are 8 characters (base62) and use the compact public path `/r/{token}`.
+- The previous `/go?t={token}` route remains available for legacy 32-character links.
+- Admin-created and API-created redirect links now both return `/r/{token}`.
+- Redirect link entry, CAPTCHA failure, and successful verification events are written to the visits collection. Link counters are updated in the correct collection.
+- Dashboard totals now include records from both `urls` and `redirects`, rather than counting only protected-content URLs.
+- Clicks count the initial CAPTCHA-pending entry; successful CAPTCHA verification increments the verified/visit count. Bot, blocked, and CAPTCHA-failure counters are tracked separately.
+- Existing historical redirect visits were not backfilled. Analytics start accumulating correctly for events after this update.
+- These changes were source-reviewed on GitHub, but have not yet been run against a live MongoDB/hCaptcha deployment or verified in a browser.
