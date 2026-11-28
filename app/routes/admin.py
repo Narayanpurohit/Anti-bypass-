@@ -23,7 +23,7 @@ async def add_url(body: AddURL):
         s_url     = shortener_cfg["shortener_url"].rstrip("/")
         s_api_key = shortener_cfg["shortener_api_key"]
         try:
-            async with httpx.AsyncClient(, timeout=10) as c:
+            async with httpx.AsyncClient(timeout=10) as c:
                 resp = await c.get(s_url, params={"api": s_api_key, "url": url, "format": "json"})
                 s_data = resp.json()
         except Exception as e:
