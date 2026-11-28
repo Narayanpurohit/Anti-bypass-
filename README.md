@@ -14,7 +14,7 @@
 5. Enter the first administrator username, email and password, and optionally your hCaptcha site/secret keys, then select **Create Admin & Finish Setup**.
 6. The installer creates the required MySQL tables, writes the protected config.php file, creates the first Admin account and signs that account in. You will be redirected to the homepage.
 
-The installer creates the schema automatically. Do not import install.sql separately on a fresh installation. The application folder must be writable by PHP during first setup so it can create config.php; after setup, keep config.php private and do not make it publicly readable.
+The installer creates the schema automatically. It also opens if an older PHP config.php exists but the database has not yet been initialized with user accounts. Do not import install.sql separately on a fresh installation. The application folder must be writable by PHP during first setup so it can create config.php; after setup, keep config.php private and do not make it publicly readable.
 
 ## Accounts and dashboards
 - The first account created by the setup wizard is the Admin.
