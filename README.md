@@ -1,4 +1,4 @@
-# Anti-bypass / TeamDev Proxy
+# Anti Bypass
 
 A FastAPI-based link-protection and redirect service with browser-header bot screening, hCaptcha verification, optional third-party URL shortener integration, visit analytics, IP blocking, API keys, and a web admin dashboard.
 
