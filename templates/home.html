@@ -18,12 +18,15 @@
   <main>
     <div class="mark">AB</div>
     <h1>Welcome to Anti Bypass</h1>
-    <p>A simple, secure place to manage your links and access your dashboard.</p>
-    <nav aria-label="Account">
+    <p>Create and manage protected short links with bot detection, CAPTCHA verification, link analytics and personal API keys — all from one secure dashboard.</p>
+    <nav id="auth-actions" aria-label="Account">
       <a class="primary" href="/login">Log in</a>
       <a href="/sign-up">Sign up</a>
     </nav>
-    <small>© TeamDev</small>
+    <small>Anti Bypass · Secure link management</small>
   </main>
+<script>
+(async()=>{try{const r=await fetch("/auth/me");if(r.ok){const a=document.getElementById("auth-actions");a.innerHTML='<a class="primary" href="/dashboard">Open Dashboard</a>';}}catch(e){}})();
+</script>
 </body>
 </html>
