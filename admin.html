@@ -274,7 +274,7 @@ input:focus{border-color:rgba(0,212,255,.4);box-shadow:0 0 0 3px rgba(0,212,255,
       <div class="nav-item" onclick="gotoPage('visits')"><span class="nav-icon">◎</span>Visits</div>
       <div class="nav-item" onclick="gotoPage('blocked')"><span class="nav-icon">⊘</span>Blocked IPs</div>
       <div class="nav-item" onclick="gotoPage('bots')"><span class="nav-icon">⚡</span>Bot Logs</div>
-      <div class="nav-section">Config</div>
+      <div class="nav-section" id="admin-nav-section" style="display:none">Administration</div><div class="nav-item" id="admin-users-nav" style="display:none" onclick="openUsersPage()"><span class="nav-icon">♙</span>User Management</div><div class="nav-section">Config</div>
       <div class="nav-item" onclick="gotoPage('settings')"><span class="nav-icon">⚙</span>Settings</div>
     </nav>
     <div class="sb-footer">
@@ -329,11 +329,12 @@ async function doLogin(){
 }
 function enterDashboard(){const ls=document.getElementById('login-screen');if(ls)ls.style.display='none';document.getElementById('app').style.display='block';updateRoleNavigation();gotoPage('dashboard');}
 async function logout(){try{await fetch('/auth/logout',{method:'POST'});}catch(e){}USER=null;ADMIN_MODE=false;location.href='/';}
-function updateRoleNavigation(){const show=!!(USER&&USER.role==='admin'&&ADMIN_MODE);const item=document.getElementById('admin-users-nav'),section=document.getElementById('admin-nav-section');if(item)item.style.display=show?'flex':'none';if(section)section.style.display=show?'block':'none';}
+function updateRoleNavigation(){const show=!!(USER&&USER.role==='admin'&&ADMIN_MODE);const item=document.getElementById('admin-users-nav'),section=document.getElementById('admin-nav-section'),sw=document.getElementById('dashboard-switch');if(item)item.style.display=show?'flex':'none';if(section)section.style.display=show?'block':'none';if(sw){sw.style.display=USER&&USER.role==='admin'?'inline-flex':'none';sw.textContent=ADMIN_MODE?'Switch to User Dashboard':'Switch to Admin Dashboard';}}
 function switchDashboard(){if(!USER||USER.role!=='admin')return;ADMIN_MODE=!ADMIN_MODE;updateRoleNavigation();gotoPage('dashboard');}
+function openUsersPage(){gotoPage('users');}
 function logout(){PWD='';location.reload();}
 
-const PAGE_NAV_MAP={dashboard:0,urls:1,apikeys:2,visits:3,blocked:4,bots:5,settings:6,users:7};
+const PAGE_NAV_MAP={dashboard:0,urls:1,apikeys:2,visits:3,blocked:4,bots:5,users:6,settings:7};
 const BNAV_PAGES=['dashboard','urls','apikeys','blocked','settings'];
 
 function gotoPage(page){
@@ -418,6 +419,7 @@ async function renderDashboard(){
   try{
     const d=await api(`/admin/stats?password=${encodeURIComponent(PWD)}`);
     const s=d.summary||{};
+    const adminStats=ADMIN_MODE?'<div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-val c-blue">'+(s.total_users||0)+'</div><div class="stat-icon">♙</div></div><div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val c-green">'+(s.active_users||0)+'</div><div class="stat-icon">✓</div></div><div class="stat-card"><div class="stat-label">Suspended Users</div><div class="stat-val c-red">'+(s.suspended_users||0)+'</div><div class="stat-icon">⊘</div></div>':'';
     // 7-day timeline
     const tl=d.timeline||[];
     const maxTL=Math.max(...tl.map(x=>x.count),1);
@@ -443,7 +445,7 @@ async function renderDashboard(){
     setMain(`
       <div class="page-hdr">
         <div><div class="page-title">Dashboard</div><div class="page-sub">Real-time analytics overview</div></div>
-        <button class="btn btn-ghost btn-sm" onclick="renderDashboard()">⟳ Refresh</button>
+        <div class="hdr-actions"><button id="dashboard-switch" class="btn btn-primary btn-sm" style="display:none" onclick="switchDashboard()">Admin Dashboard</button><button class="btn btn-ghost btn-sm" onclick="renderDashboard()">⟳ Refresh</button></div>
       </div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">Total Links</div><div class="stat-val c-blue">${s.total_urls||0}</div><div class="stat-icon">⛓</div></div>
@@ -452,6 +454,7 @@ async function renderDashboard(){
         <div class="stat-card"><div class="stat-label">Bots Caught</div><div class="stat-val c-amber">${s.total_bots||0}</div><div class="stat-icon">⚡</div></div>
         <div class="stat-card"><div class="stat-label">Blocked</div><div class="stat-val c-red">${s.total_blocked||0}</div><div class="stat-icon">⊘</div></div>
         <div class="stat-card"><div class="stat-label">Cap. Fails</div><div class="stat-val c-red">${s.total_captcha_fails||0}</div><div class="stat-icon">✗</div></div>
+        ${adminStats}
       </div>
       <div class="section-grid">
         <div class="card">
