@@ -26,6 +26,11 @@ $sqls=[
 foreach($sqls as $sql)$p->exec($sql);
 $cols=['urls'=>['user_id'=>'BIGINT UNSIGNED NULL'],'redirects'=>['user_id'=>'BIGINT UNSIGNED NULL'],'visits'=>['user_id'=>'BIGINT UNSIGNED NULL'],'blocked_ips'=>['user_id'=>'BIGINT UNSIGNED NULL'],'api_keys'=>['user_id'=>'BIGINT UNSIGNED NULL']];
 foreach($cols as $table=>$items)foreach($items as $col=>$def){$q=$p->prepare("SHOW COLUMNS FROM ".$table." LIKE ?");$q->execute([$col]);if(!$q->fetch())$p->exec("ALTER TABLE ".$table." ADD COLUMN ".$col." ".$def);}
+ // Older single-admin schemas used a globally unique IP. Make the blocklist user-scoped.
+ $idx=$p->query("SHOW INDEX FROM blocked_ips")->fetchAll();$hasComposite=false;$singleIp=[];
+ foreach($idx as $row){if($row['Key_name']==='uq_block_user_ip')$hasComposite=true;if((int)$row['Non_unique']===0&&$row['Column_name']==='ip'&&$row['Key_name']!=='PRIMARY')$singleIp[$row['Key_name']]=true;}
+ foreach(array_keys($singleIp) as $key)$p->exec("ALTER TABLE blocked_ips DROP INDEX ".$key);
+ if(!$hasComposite)$p->exec("ALTER TABLE blocked_ips ADD UNIQUE KEY uq_block_user_ip(user_id,ip)");
 }
 function session_user():?array{if(empty($_SESSION['user_id']))return null;$q=app_db()->prepare('SELECT id,username,email,role,is_active FROM users WHERE id=? LIMIT 1');$q->execute([(int)$_SESSION['user_id']]);$u=$q->fetch();if(!$u||!(int)$u['is_active']){$_SESSION=[];session_regenerate_id(true);return null;}return $u;}
 function require_user():array{$u=session_user();if(!$u)fail('Please log in to continue.',401);return $u;}
