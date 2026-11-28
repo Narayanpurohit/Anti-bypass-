@@ -8,7 +8,8 @@ from app.database import urls_col, visits_col
 
 TOKEN_CHARS = string.ascii_letters + string.digits
 TOKEN_LEN = 62
-PROXY_TOKEN_LEN = 32
+PROXY_TOKEN_LEN = 8
+LEGACY_PROXY_TOKEN_LEN = 32
 APIKEY_LEN = 40
 
 def gen_token() -> str:
@@ -126,10 +127,13 @@ async def log_visit(token: str, req: Request, status: str, reason: str = ""):
     }
     field = stat_map.get(status, "stats.clicks")
     extra = {"stats.clicks": 1} if status not in ("captcha_pending",) else {}
-    await urls_col.update_one(
-        {"token": token},
-        {"$inc": {field: 1, **extra}, "$set": {"last_visit": datetime.utcnow()}}
-    )
+    update = {
+        "$inc": {field: 1, **extra},
+        "$set": {"last_visit": datetime.utcnow()},
+    }
+    await urls_col.update_one({"token": token}, update)
+    from app.database import redir_col
+    await redir_col.update_one({"token": token}, update)
 
 def verify_html(token: str, verify_endpoint: str = "/api/verify") -> str:
     return f"""<!DOCTYPE html>
