@@ -4,3 +4,4 @@ motor
 httpx
 python-multipart
 pydantic
+python-dotenv
