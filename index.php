@@ -28,7 +28,7 @@ function shorten(string $url):string{$c=getcfg();if(!$c||!(int)$c['enabled']||!$
 function new_session(string $t,string $target):string{$sid=rtrim(strtr(base64_encode(random_bytes(48)),'+/','-_'),'=');pdo()->prepare('INSERT INTO sessions(sid,token,target,expires,ip) VALUES(?,?,?,?,?)')->execute([$sid,$t,$target,gmdate('Y-m-d H:i:s',time()+7200),ip()]);return $sid;}
 function redir(string $t):?array{$s=pdo()->prepare('SELECT * FROM redirects WHERE token=?');$s->execute([$t]);return $s->fetch()?:null;}
 function debughtml(string $title,string $msg):string{return '<!doctype html><html><head><meta charset="utf-8"><title>'.htmlspecialchars($title).'</title><style>body{background:#060810;color:#dde4f0;font:15px Arial;padding:8vh}h1{color:#ff4d6d}p{color:#9aa5bd}</style></head><body><h1>'.htmlspecialchars($title).'</h1><p>'.htmlspecialchars($msg).'</p><a href="javascript:history.back()">Go back</a></body></html>';}
-$method=strtoupper($_SERVER['REQUEST_METHOD']??'GET');$path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH)?:'/';\nrequire_once __DIR__.'/portal.php';
+$method=strtoupper($_SERVER['REQUEST_METHOD']??'GET');$path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH)?:'/';\ndefine('ANTI_BYPASS_ROUTER', true);require_once __DIR__.'/portal.php';
 header('Access-Control-Allow-Origin: *');header('Access-Control-Allow-Methods: GET, POST, OPTIONS');header('Access-Control-Allow-Headers: Content-Type, Authorization');if($method==='OPTIONS'){http_response_code(204);exit;}
 try{
  if($path==='/'&&$method==='GET')html('<h1>Hello</h1>');
