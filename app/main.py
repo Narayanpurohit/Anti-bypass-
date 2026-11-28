@@ -11,7 +11,7 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
-app = FastAPI(title="TeamDev Proxy", docs_url=None, redoc_url=None)
+app = FastAPI(title="Anti Bypass", docs_url=None, redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
