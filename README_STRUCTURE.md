@@ -1,11 +1,13 @@
-# PHP Project Structure
+# Project Structure
 
-- index.php — PHP router, application logic, APIs and redirects
-- config.example.php — sample MySQL, hCaptcha and admin settings; copy to config.php
-- install.sql — MySQL schema
-- .htaccess — Apache route rewriting and config-file protection
-- admin.html — existing admin dashboard
-- templates/home.html — public homepage
-- README.md — shared-hosting installation instructions
+- index.php — first-run wizard, routing, login/session endpoints, protected links and application APIs
+- lib.php — schema installer, authentication helpers, per-user settings, analytics and CAPTCHA helpers
+- config.php — generated privately by the first-run wizard; contains database credentials and site settings
+- .htaccess — URL rewriting and protection for private PHP/config/SQL files
+- admin.html — shared user dashboard and role-aware Admin Dashboard
+- login.html — email/password login page
+- signup.html — temporary sign-up pause message
+- templates/home.html — public product homepage
+- install.sql — legacy schema reference; fresh installs create tables through the setup wizard
 
-Runtime: PHP 8.1+, MySQL/MariaDB, PDO MySQL, cURL and Apache mod_rewrite. No Python or MongoDB runtime is required.
+No Python, FastAPI or MongoDB runtime is required.
