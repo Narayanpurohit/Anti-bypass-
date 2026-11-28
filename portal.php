@@ -80,7 +80,7 @@ function portal_handle(string $path,string $method): void {
                 $hash=password_hash($password,PASSWORD_DEFAULT);
                 $q=$dbx->prepare("INSERT INTO users(username,email,password_hash,role,status,created_at) VALUES(?,?,?,'super_admin','active',UTC_TIMESTAMP())");
                 $q->execute([$username,$email,$hash]);
-                $cfg="<?php\nreturn ".var_export(['host'=>$host,'port'=>$port,'name'=>$db,'user'=>$user,'pass'=>$pass,'site'=>'','secret'=>'','admin'=>'','base'=>''],true).";\n";
+                $cfg="<?php\nreturn ".var_export(['host'=>$host,'port'=>$port,'name'=>$db,'user'=>$user,'pass'=>$pass,'admin'=>'','base'=>''],true).";\n";
                 if(file_put_contents(__DIR__.'/config.php',$cfg,LOCK_EX)===false) throw new RuntimeException('Unable to write config.php');
                 @chmod(__DIR__.'/config.php',0600);
                 file_put_contents(__DIR__.'/.installed',gmdate('c'),LOCK_EX); @chmod(__DIR__.'/.installed',0600);
@@ -127,6 +127,7 @@ function portal_handle(string $path,string $method): void {
     }
     if ($path==='/settings') {
         $u=portal_require_user();
+        $q=pdo()->prepare('SELECT * FROM user_settings WHERE user_id=?');$q->execute([(int)$u['id']]);$v=$q->fetch()?:[];
         if($method==='POST') {
             portal_check_csrf(); if(($_POST['action']??'')==='password'){ $cur=(string)($_POST['current_password']??'');$new=(string)($_POST['new_password']??'');$q=pdo()->prepare('SELECT password_hash FROM users WHERE id=?');$q->execute([(int)$u['id']]);$hash=(string)$q->fetchColumn();if(!password_verify($cur,$hash)||strlen($new)<12) portal_page('Password update failed','<div class="card"><p class="danger">Current password is incorrect or new password is shorter than 12 characters.</p><a href="/settings">Back</a></div>',422);pdo()->prepare('UPDATE users SET password_hash=? WHERE id=?')->execute([password_hash($new,PASSWORD_DEFAULT),(int)$u['id']]);header('Location: /settings?password_changed=1',true,302);exit; } $theme=(string)($_POST['theme']??'dark');$timezone=(string)($_POST['timezone']??'UTC');$domain=trim((string)($_POST['shortener_domain']??''));$api=trim((string)($_POST['shortener_api_key']??''));
             if(!in_array($theme,['light','dark'],true)||!in_array($timezone,timezone_identifiers_list(),true)||($domain!==''&&!filter_var($domain,FILTER_VALIDATE_URL))) portal_page('Invalid settings','<div class="card"><p class="danger">Please check the values and try again.</p><a href="/settings">Back</a></div>',422);
