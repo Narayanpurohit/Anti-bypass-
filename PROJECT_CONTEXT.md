@@ -10,7 +10,7 @@ This is a Python FastAPI + MongoDB application for managing short links, CAPTCHA
 
 **Important product limitation:** Login and Sign up are placeholders only. There is no user registration, login/session system, password hashing, or user account database implemented yet.
 
-The former `/p` reverse-proxy behavior has intentionally been replaced with a normal HTTP redirect after a valid session. Do not restore proxying, browser impersonation, response rewriting, or mechanisms intended to bypass third-party websites' anti-bot or access controls.
+The former `/p` reverse-proxy behavior has intentionally been replaced with a normal HTTP redirect after a valid session. Generated redirect links now use `/r/{8-character-token}`; legacy `/go?t={32-character-token}` links remain supported. Do not restore proxying, browser impersonation, response rewriting, or mechanisms intended to bypass third-party websites' anti-bot or access controls.
 
 ## 2. Repository layout
 
@@ -107,7 +107,8 @@ No explicit MongoDB index creation is currently visible in `app/database.py`.
 - `GET /token?t=...` — checks a managed URL, applies request heuristics/blocklist, then displays hCaptcha or creates a session
 - `POST /api/verify` — verifies hCaptcha and creates a redirect session
 - `GET /p?s=...` — checks the session expiry and redirects to its stored destination
-- `GET /go?t=...` — serves the hCaptcha page for a generated redirect link
+- `GET /r/{token}` — serves the hCaptcha page for a generated redirect link using an 8-character token
+- `GET /go?t=...` — backward-compatible route for previously generated 32-character links
 - `POST /api/go-verify` — verifies hCaptcha and returns the redirect destination
 - `GET /api?... ` — creates a generated short link, optionally using a configured external URL shortener
 
