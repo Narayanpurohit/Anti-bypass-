@@ -142,7 +142,7 @@ def verify_html(token: str, verify_endpoint: str = "/api/verify") -> str:
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#060810"/>
-<title>Verify — TeamDev</title>
+<title>Verify — Anti Bypass</title>
 <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -249,7 +249,7 @@ h1{{font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px;
         <path d="M12 18L16 22L24 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="brand-name">TeamDev</span>
+    <span class="brand-name">Anti Bypass</span>
   </div>
   <div class="card">
     <div class="status-pill"><span class="pill-dot"></span>Security Check</div>
