@@ -11,7 +11,7 @@
     .mark{width:58px;height:58px;margin:0 auto 24px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(135deg,#14c9e8,#7865f5);font-size:27px;font-weight:800;color:#07101b}
     h1{margin:0;font-size:clamp(32px,7vw,48px);letter-spacing:-1.5px}p{max-width:430px;margin:16px auto 30px;color:#aab8d0;line-height:1.7}
     nav{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}a{min-width:140px;padding:13px 22px;border:1px solid #34435f;border-radius:12px;color:#edf3ff;text-decoration:none;font-weight:700;transition:transform .2s,border-color .2s}a.primary{border-color:transparent;background:linear-gradient(110deg,#13bcd8,#7865f5)}a:hover{transform:translateY(-2px);border-color:#55d8ee}
-    small{display:block;margin-top:34px;color:#71819d}
+    .features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:26px 0 30px;text-align:left}.feature{padding:13px;border:1px solid #26344b;border-radius:12px;background:#0b1321}.feature b{display:block;font-size:13px;margin-bottom:5px;color:#eaf5ff}.feature span{font-size:11px;line-height:1.5;color:#91a2bd}small{display:block;margin-top:30px;color:#71819d}@media(max-width:480px){.features{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -19,6 +19,7 @@
     <div class="mark">AB</div>
     <h1>Welcome to Anti Bypass</h1>
     <p>Create and manage protected short links with bot detection, CAPTCHA verification, link analytics and personal API keys — all from one secure dashboard.</p>
+    <div class="features"><div class="feature"><b>Protected Links</b><span>Wrap destination URLs with a verification step before visitors continue.</span></div><div class="feature"><b>Bot Detection</b><span>Detect suspicious automated requests and block known bot patterns.</span></div><div class="feature"><b>CAPTCHA Verification</b><span>Add hCaptcha verification to reduce unwanted automated traffic.</span></div><div class="feature"><b>Personal Analytics</b><span>Track visits, devices, browsers, blocked traffic and API usage.</span></div></div>
     <nav id="auth-actions" aria-label="Account">
       <a class="primary" href="/login">Log in</a>
       <a href="/sign-up">Sign up</a>
