@@ -25,7 +25,7 @@ A FastAPI-based link-protection and redirect service with browser-header bot scr
 The application provides two distinct link flows:
 
 1. **Protected content flow — /token:** validates a 62-character token, checks whether the link is active, screens browser-like request headers, checks the IP blocklist, optionally requires hCaptcha, creates a temporary session, and streams the target page through the application's proxy endpoint.
-2. **Redirect wrapper flow — /go:** validates a 32-character token, screens browser-like request headers, checks the IP blocklist and link expiry, requires hCaptcha, and then redirects the visitor to the stored destination URL.
+2. **Redirect wrapper flow — /r/{token}:** validates an 8-character token, screens browser-like request headers, checks the IP blocklist and link expiry, requires hCaptcha, and then redirects the visitor to the stored destination URL. Legacy `/go?t={32-character-token}` links remain supported.
 
 The public **/api** endpoint creates links for the redirect-wrapper flow. An optional external URL shortener can be configured. When enabled, the destination is shortened first and the resulting URL is wrapped by this application.
 
@@ -59,13 +59,13 @@ Entry URL: /token?t=YOUR_62_CHARACTER_TOKEN
 5. The visitor IP is checked against the blocklist.
 6. If CAPTCHA is enabled for the link (enabled by default), an hCaptcha page is displayed.
 7. After successful verification, the server creates a session that expires after two hours.
-8. The visitor is sent to /p?s=SESSION_ID. The application fetches and streams the target page through its proxy route.
+8. The visitor is sent to /p?s=SESSION_ID, which validates the temporary session and performs a normal HTTP redirect to the target URL.
 
 If CAPTCHA is disabled for a protected URL, a session is created after the initial checks without showing hCaptcha.
 
 ### Flow B — Redirect wrapper link
 
-Entry URL: /go?t=YOUR_32_CHARACTER_TOKEN
+Entry URL: /r/YOUR_8_CHARACTER_TOKEN (legacy: /go?t=YOUR_32_CHARACTER_TOKEN)
 
 1. Visitor opens the generated /go link.
 2. Server checks browser-like headers, IP blocklist, token validity, and expiry.
@@ -81,8 +81,8 @@ Endpoint: /api?url=DESTINATION_URL&api=API_KEY&format=json&expiry=HOURS
 1. The API checks request headers and validates the destination URL.
 2. If an API key is supplied, it must exist and be active.
 3. If an external shortener is configured and enabled, the destination is sent to that shortener.
-4. The resulting URL is saved in MongoDB with a random 32-character token.
-5. The API returns a /r/... link.
+4. The resulting URL is saved in MongoDB with a random 8-character token.
+5. The API returns a compact `/r/{8-character-token}` link.
 
 **API-key behavior:** In the current implementation, the api parameter is optional. If supplied, it is validated; if omitted, the endpoint does not require a key. Do not assume this endpoint is private or key-protected until the code is changed to require a key.
 
@@ -501,7 +501,7 @@ Example success response:
 {
   "status": "success",
   "message": "",
-  "shortenedUrl": "https://links.example.com/go?t=GENERATED_TOKEN",
+  "shortenedUrl": "https://links.example.com/r/Ab12Cd34",
   "expiry": "24h"
 }
 ~~~
