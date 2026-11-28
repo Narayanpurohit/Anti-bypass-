@@ -82,7 +82,7 @@ Endpoint: /api?url=DESTINATION_URL&api=API_KEY&format=json&expiry=HOURS
 2. If an API key is supplied, it must exist and be active.
 3. If an external shortener is configured and enabled, the destination is sent to that shortener.
 4. The resulting URL is saved in MongoDB with a random 32-character token.
-5. The API returns a /go?t=... link.
+5. The API returns a /r/... link.
 
 **API-key behavior:** In the current implementation, the api parameter is optional. If supplied, it is validated; if omitted, the endpoint does not require a key. Do not assume this endpoint is private or key-protected until the code is changed to require a key.
 
@@ -480,7 +480,7 @@ The routes below are implemented by the current server.py. URL-encode query para
 | POST | /api/verify | Verifies hCaptcha for /token and creates a two-hour session. |
 | GET | /p?s=SESSION_ID | Proxies/streams the target page for a valid session. |
 | GET | /api?url=URL&api=KEY&format=json&expiry=HOURS | Creates a /go wrapper. api is optional in the current code; if supplied, it is validated. |
-| GET | /go?t=TOKEN | Starts redirect-wrapper flow; token must be 32 characters. |
+| GET | /r/TOKEN | Starts redirect-wrapper flow with an 8-character token. Legacy /go?t=TOKEN links (32-character tokens) remain supported. |
 | POST | /api/go-verify | Verifies hCaptcha for /go and returns the destination URL. |
 
 ### Create a wrapped link
