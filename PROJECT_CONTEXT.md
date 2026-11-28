@@ -1,4 +1,4 @@
-# Project Context — Anti-bypass / TeamDev
+# Project Context — Anti Bypass
 
 > Last reviewed: 2026-11-28  
 > Repository: https://github.com/Narayanpurohit/Anti-bypass-  
