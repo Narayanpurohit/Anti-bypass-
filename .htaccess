@@ -1,7 +1,8 @@
 Options -Indexes
 RewriteEngine On
+<FilesMatch "^(config\.php|\.installed)$">
+  Require all denied
+</FilesMatch>
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]
-
-<FilesMatch "^(config\\.php|\\.installed)$">\n  Require all denied\n</FilesMatch>\n
