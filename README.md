@@ -11,7 +11,7 @@
 2. In cPanel, create a MySQL database and a database user, then grant that user all privileges on the database.
 3. Open your domain over HTTPS. The first-run setup wizard will appear.
 4. Enter the database host, database name, username and password, then select **Test Database & Continue**.
-5. Enter the first administrator username, email and password, then select **Create Admin & Finish Setup**.
+5. Enter the first administrator username, email and password, and optionally your hCaptcha site/secret keys, then select **Create Admin & Finish Setup**.
 6. The installer creates the required MySQL tables, writes the protected config.php file, creates the first Admin account and signs that account in. You will be redirected to the homepage.
 
 The installer creates the schema automatically. Do not import install.sql separately on a fresh installation. The application folder must be writable by PHP during first setup so it can create config.php; after setup, keep config.php private and do not make it publicly readable.
@@ -29,4 +29,4 @@ The installer creates the schema automatically. Do not import install.sql separa
 When the wizard is run against an earlier Anti Bypass MySQL schema, it attempts to add user ownership columns and assign unowned legacy rows to the first Admin. Existing MongoDB data is not imported automatically; migrate it separately before switching production traffic.
 
 ## Security notes
-Use HTTPS. Choose a unique administrator password of at least 10 characters. Configure hCaptcha site and secret keys in config.php if CAPTCHA verification is enabled. Do not commit config.php to GitHub.
+Use HTTPS. Choose a unique administrator password of at least 10 characters. If you leave the optional hCaptcha keys blank, CAPTCHA-protected links will not verify until you add valid keys to config.php. Do not commit config.php to GitHub.
