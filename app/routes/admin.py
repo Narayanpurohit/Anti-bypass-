@@ -51,7 +51,7 @@ async def add_url(body: AddURL):
         "created":   datetime.utcnow(),
     })
 
-    short_url = f"{BASE_URL}/go?t={proxy_token}"
+    short_url = f"{BASE_URL}/r/{proxy_token}"
     expiry_label = f"{body.expiry_hours}h" if body.expiry_hours else "permanent"
     return {"ok": True, "token": proxy_token, "url": short_url, "expiry": expiry_label}
 
@@ -76,7 +76,7 @@ async def admin_go_links(password: str):
     chk(password)
     docs = await redir_col.find({"source": "admin"}, {"_id": 0}).sort("created", -1).to_list(200)
     for d in docs:
-        d["short_url"] = f"{BASE_URL}/go?t={d['token']}"
+        d["short_url"] = f"{BASE_URL}/r/{d['token']}"
         if d.get("expires"):
             d["expires"] = d["expires"].isoformat()
         if d.get("created"):
@@ -140,18 +140,27 @@ async def admin_visits(password: str, token: Optional[str] = None, limit: int = 
 @router.get("/admin/stats")
 async def admin_stats(password: str):
     chk(password)
-    pipe = [{"$group": {
+    stats_pipeline = [{"$group": {
         "_id": None,
-        "total_urls":          {"$sum": 1},
         "total_clicks":        {"$sum": "$stats.clicks"},
         "total_visits":        {"$sum": "$stats.visits"},
         "total_blocked":       {"$sum": "$stats.blocked"},
         "total_bots":          {"$sum": "$stats.bots"},
         "total_captcha_fails": {"$sum": "$stats.captcha_fails"},
     }}]
-    r = await urls_col.aggregate(pipe).to_list(1)
-    summary = r[0] if r else {}
-    summary.pop("_id", None)
+    import asyncio
+    url_stats, redirect_stats, url_count, redirect_count = await asyncio.gather(
+        urls_col.aggregate(stats_pipeline).to_list(1),
+        redir_col.aggregate(stats_pipeline).to_list(1),
+        urls_col.count_documents({}),
+        redir_col.count_documents({}),
+    )
+    summary = {"total_urls": url_count + redirect_count}
+    for key in ("total_clicks", "total_visits", "total_blocked", "total_bots", "total_captcha_fails"):
+        summary[key] = (
+            (url_stats[0].get(key, 0) if url_stats else 0)
+            + (redirect_stats[0].get(key, 0) if redirect_stats else 0)
+        )
 
     since    = datetime.utcnow() - timedelta(days=7)
     timeline = await visits_col.aggregate([
