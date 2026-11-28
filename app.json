@@ -1,6 +1,6 @@
 {
-  "name": "TeamDev Proxy",
-  "description": "TeamDev Anti-Bot Proxy",
+  "name": "Anti Bypass",
+  "description": "Anti Bypass link protection and verification service",
   "stack": "container",
   "env": {
     "MONGO_URL": {
