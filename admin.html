@@ -332,8 +332,6 @@ async function logout(){try{await fetch('/auth/logout',{method:'POST'});}catch(e
 function updateRoleNavigation(){const show=!!(USER&&USER.role==='admin'&&ADMIN_MODE);const item=document.getElementById('admin-users-nav'),section=document.getElementById('admin-nav-section'),sw=document.getElementById('dashboard-switch');if(item)item.style.display=show?'flex':'none';if(section)section.style.display=show?'block':'none';if(sw){sw.style.display=USER&&USER.role==='admin'?'inline-flex':'none';sw.textContent=ADMIN_MODE?'Switch to User Dashboard':'Switch to Admin Dashboard';}}
 function switchDashboard(){if(!USER||USER.role!=='admin')return;ADMIN_MODE=!ADMIN_MODE;updateRoleNavigation();gotoPage('dashboard');}
 function openUsersPage(){gotoPage('users');}
-function logout(){PWD='';location.reload();}
-
 const PAGE_NAV_MAP={dashboard:0,urls:1,apikeys:2,visits:3,blocked:4,bots:5,users:6,settings:7};
 const BNAV_PAGES=['dashboard','urls','apikeys','blocked','settings'];
 
@@ -361,7 +359,7 @@ async function api(endpoint,method='GET',body=null){
 function setMain(html){
   const el=document.getElementById('main');
   el.style.opacity='0';el.style.transition='opacity .18s';
-  setTimeout(()=>{el.innerHTML=html;el.style.opacity='1';},140);
+  setTimeout(()=>{el.innerHTML=html;el.style.opacity='1';updateRoleNavigation();},140);
 }
 
 function toast(msg,type='ok'){
