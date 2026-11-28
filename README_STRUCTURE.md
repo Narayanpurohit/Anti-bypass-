@@ -15,8 +15,10 @@ The legacy `server:app` import remains supported.
 - `templates/home.html`: public landing page
 
 ## Configuration
-Copy `.env.example` to `.env` and set the MongoDB URI, hCaptcha credentials,
-admin password and public base URL. Never commit real credentials.
+Use `.env.example` as a reference and set these variables in your shell or hosting
+provider configuration: MongoDB URI, hCaptcha credentials, admin password and
+public base URL. The application does not automatically load `.env` files.
+Never commit real credentials.
 
 ## Run
 Install `requirements.txt`, then run `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
