@@ -1,14 +1,32 @@
-# Anti Bypass — PHP + MySQL
+# Anti Bypass — PHP + MySQL multi-user build
 
-Shared-hosting port. Requires PHP 8.1+, MySQL/MariaDB, PDO MySQL, cURL, OpenSSL and Apache mod_rewrite.
+## Requirements
+- PHP 8.1 or newer
+- MySQL 5.7+/MariaDB with permission to create and alter tables
+- PHP extensions: PDO MySQL, cURL, OpenSSL
+- Apache with mod_rewrite (typical cPanel shared hosting)
 
-## Install
-1. Upload repository files to public_html.
-2. Create a MySQL database and user in cPanel and grant all privileges.
-3. Import install.sql using phpMyAdmin.
-4. Copy config.example.php to config.php and enter DB credentials, BASE_URL, a strong ADMIN_PASSWORD and hCaptcha keys.
-5. Open /health and /admin over HTTPS.
+## First-time installation
+1. Upload the contents of this branch to your hosting account's public_html folder.
+2. In cPanel, create a MySQL database and a database user, then grant that user all privileges on the database.
+3. Open your domain over HTTPS. The first-run setup wizard will appear.
+4. Enter the database host, database name, username and password, then select **Test Database & Continue**.
+5. Enter the first administrator username, email and password, then select **Create Admin & Finish Setup**.
+6. The installer creates the required MySQL tables, writes the protected config.php file, creates the first Admin account and signs that account in. You will be redirected to the homepage.
 
-Routes retained: homepage, admin dashboard, health, protected token flow, short redirect flow, short-link API, analytics, IP blocklist, API keys and shortener settings.
+The installer creates the schema automatically. Do not import install.sql separately on a fresh installation. The application folder must be writable by PHP during first setup so it can create config.php; after setup, keep config.php private and do not make it publicly readable.
 
-Existing MongoDB data is not migrated automatically. Export/import it separately before moving production traffic. The current single-admin password model is retained; multi-user accounts and per-user isolation are a separate feature. Test on hosting before replacing the live deployment.
+## Accounts and dashboards
+- The first account created by the setup wizard is the Admin.
+- Sign up is intentionally paused; Admin can create user accounts from Admin Dashboard → User Management.
+- All accounts use the same login page.
+- Every user has their own links, visits, analytics, API keys, IP blocklist and shortener settings.
+- Admins can switch between their own User Dashboard and the platform-wide Admin Dashboard.
+- Admin Dashboard includes global usage statistics and user management (create, suspend, activate and delete users).
+- User ownership is enforced by server-side database queries, not just by hiding UI elements.
+
+## Existing data
+When the wizard is run against an earlier Anti Bypass MySQL schema, it attempts to add user ownership columns and assign unowned legacy rows to the first Admin. Existing MongoDB data is not imported automatically; migrate it separately before switching production traffic.
+
+## Security notes
+Use HTTPS. Choose a unique administrator password of at least 10 characters. Configure hCaptcha site and secret keys in config.php if CAPTCHA verification is enabled. Do not commit config.php to GitHub.
