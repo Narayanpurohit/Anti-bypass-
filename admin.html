@@ -240,9 +240,9 @@ input:focus{border-color:rgba(0,212,255,.4);box-shadow:0 0 0 3px rgba(0,212,255,
       </div>
       <span class="login-logo">Anti Bypass</span>
     </div>
-    <div class="login-sub">Admin Panel v3.0</div>
+    <div class="login-sub">Secure account login</div>
     <div class="input-wrap">
-      <input class="login-input" type="password" id="pwd-input" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <input class="login-input" type="email" id="email-input" placeholder="Email address" autocomplete="username"/><input class="login-input" type="password" id="pwd-input" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-err" id="login-err"></div>
@@ -314,30 +314,26 @@ input:focus{border-color:rgba(0,212,255,.4);box-shadow:0 0 0 3px rgba(0,212,255,
 
 <script>
 let PWD = '';
+let USER = null;
+let ADMIN_MODE = false;
 let curPage = 'dashboard';
 
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('show');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('show');}
 
 async function doLogin(){
-  const pwd=document.getElementById('pwd-input').value.trim();
-  if(!pwd)return;
-  const errEl=document.getElementById('login-err');
-  errEl.textContent='';
-  const btn=document.querySelector('.login-btn');
-  btn.textContent='Checking...';btn.disabled=true;
-  try{
-    const r=await fetch(`/admin/stats?password=${encodeURIComponent(pwd)}`);
-    if(!r.ok){errEl.textContent='✗ Wrong password';btn.textContent='Sign In';btn.disabled=false;return;}
-    PWD=pwd;
-    const ls=document.getElementById('login-screen');
-    ls.style.opacity='0';ls.style.transition='opacity .4s';
-    setTimeout(()=>{ls.style.display='none';document.getElementById('app').style.display='block';gotoPage('dashboard');},380);
-  }catch(e){errEl.textContent='✗ Connection failed';btn.textContent='Sign In';btn.disabled=false;}
+ const email=document.getElementById('email-input').value.trim(),pwd=document.getElementById('pwd-input').value;
+ if(!email||!pwd)return;const err=document.getElementById('login-err'),btn=document.querySelector('.login-btn');err.textContent='';btn.textContent='Checking...';btn.disabled=true;
+ try{const r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pwd})});const d=await r.json();if(!r.ok)throw Error(d.detail||'Invalid email or password');USER=d.user;PWD='';ADMIN_MODE=false;enterDashboard();}
+ catch(e){err.textContent='✗ '+e.message;btn.textContent='Sign In';btn.disabled=false;}
 }
+function enterDashboard(){const ls=document.getElementById('login-screen');if(ls)ls.style.display='none';document.getElementById('app').style.display='block';updateRoleNavigation();gotoPage('dashboard');}
+async function logout(){try{await fetch('/auth/logout',{method:'POST'});}catch(e){}USER=null;ADMIN_MODE=false;location.href='/';}
+function updateRoleNavigation(){const show=!!(USER&&USER.role==='admin'&&ADMIN_MODE);const item=document.getElementById('admin-users-nav'),section=document.getElementById('admin-nav-section');if(item)item.style.display=show?'flex':'none';if(section)section.style.display=show?'block':'none';}
+function switchDashboard(){if(!USER||USER.role!=='admin')return;ADMIN_MODE=!ADMIN_MODE;updateRoleNavigation();gotoPage('dashboard');}
 function logout(){PWD='';location.reload();}
 
-const PAGE_NAV_MAP={dashboard:0,urls:1,apikeys:2,visits:3,blocked:4,bots:5,settings:6};
+const PAGE_NAV_MAP={dashboard:0,urls:1,apikeys:2,visits:3,blocked:4,bots:5,settings:6,users:7};
 const BNAV_PAGES=['dashboard','urls','apikeys','blocked','settings'];
 
 function gotoPage(page){
@@ -351,16 +347,14 @@ function gotoPage(page){
   const bEls=document.querySelectorAll('.bnav-item');
   if(bEls[bIdx>=0?bIdx:0])bEls[bIdx>=0?bIdx:0].classList.add('active');
   closeSidebar();
-  const pages={dashboard:renderDashboard,urls:renderURLs,apikeys:renderAPIKeys,visits:renderVisits,blocked:renderBlocked,bots:renderBots,settings:renderSettings};
+  const pages={dashboard:renderDashboard,urls:renderURLs,apikeys:renderAPIKeys,visits:renderVisits,blocked:renderBlocked,bots:renderBots,settings:renderSettings,users:renderUsers};
   pages[page]?.();
 }
 
 async function api(endpoint,method='GET',body=null){
-  const opts={method,headers:{'Content-Type':'application/json'}};
-  if(body)opts.body=JSON.stringify({...body,password:PWD});
-  const r=await fetch(endpoint,opts);
-  if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.detail||`HTTP ${r.status}`);}
-  return r.json();
+ if(ADMIN_MODE&&USER&&USER.role==='admin'&&endpoint.startsWith('/admin/'))endpoint+=endpoint.includes('?')?'&scope=all':'?scope=all';
+ const opts={method:method,headers:{'Content-Type':'application/json'}};if(body)opts.body=JSON.stringify(body);
+ const r=await fetch(endpoint,opts);if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.detail||('HTTP '+r.status));}return r.json();
 }
 
 function setMain(html){
@@ -988,6 +982,7 @@ async function clearShortenerConfig(){
     loadShortenerConfig();
   }catch(e){toast(e.message,'err');}
 }
+window.addEventListener('DOMContentLoaded',async()=>{try{const r=await fetch('/auth/me');if(r.ok){const d=await r.json();USER=d.user;enterDashboard();}}catch(e){}});
 </script>
 </body>
 </html>
