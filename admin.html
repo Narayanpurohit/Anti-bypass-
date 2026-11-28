@@ -442,7 +442,7 @@ async function renderDashboard(){
     const botReasons=(d.bot_reasons||[]).slice(0,6).map(x=>{const max=Math.max(...(d.bot_reasons||[]).map(y=>y.count),1);return `<div class="bar-row"><div class="bar-label" style="width:120px;font-size:9px">${(x._id||'unknown').slice(0,18)}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.count/max)*100}%;background:linear-gradient(90deg,var(--amber),var(--red))"></div></div><div class="bar-val">${x.count}</div></div>`;}).join('')||'<div class="empty"><p>No bot data</p></div>';
     setMain(`
       <div class="page-hdr">
-        <div><div class="page-title">Dashboard</div><div class="page-sub">Real-time analytics overview</div></div>
+        <div><div class="page-title">${ADMIN_MODE?'Admin Dashboard':'User Dashboard'}</div><div class="page-sub">${ADMIN_MODE?'Platform-wide analytics and user overview':'Your links, analytics and account overview'}</div></div>
         <div class="hdr-actions"><button id="dashboard-switch" class="btn btn-primary btn-sm" style="display:none" onclick="switchDashboard()">Admin Dashboard</button><button class="btn btn-ghost btn-sm" onclick="renderDashboard()">⟳ Refresh</button></div>
       </div>
       <div class="stat-grid">
