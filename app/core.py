@@ -372,5 +372,5 @@ table th{{color:#4a5470;background:#0b0d18}}
 </html>"""
 
 def chk(pwd: str):
-    if pwd != ADMIN_PASSWORD:
+    if not ADMIN_PASSWORD or not secrets.compare_digest(pwd, ADMIN_PASSWORD):
         raise HTTPException(403, "Unauthorized")
